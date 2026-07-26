@@ -2,7 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../db';
-import { User, Mail, Lock, Building2, Phone, FileText, AlertCircle, CheckCircle2, Loader2, ShieldAlert, ArrowLeft, RefreshCw } from 'lucide-react';
+import { User, Mail, Lock, Building2, Phone, FileText, AlertCircle, CheckCircle2, Loader2, ShieldAlert, ArrowLeft, RefreshCw, Eye, EyeOff } from 'lucide-react';
+
+const formatPhone = (val) => {
+  let value = (val || '').replace(/\D/g, '');
+  if (value.length > 11) value = value.slice(0, 11);
+  if (value.length > 6) {
+    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+  } else if (value.length > 2) {
+    return `(${value.slice(0, 2)}) ${value.slice(2)}`;
+  } else if (value.length > 0) {
+    return `(${value}`;
+  }
+  return value;
+};
+
+const formatCpfCnpj = (val) => {
+  let value = (val || '').replace(/\D/g, '');
+  if (value.length > 14) value = value.slice(0, 14);
+  
+  if (value.length <= 11) {
+    if (value.length > 9) {
+      return `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6, 9)}-${value.slice(9)}`;
+    } else if (value.length > 6) {
+      return `${value.slice(0, 3)}.${value.slice(3, 6)}.${value.slice(6)}`;
+    } else if (value.length > 3) {
+      return `${value.slice(0, 3)}.${value.slice(3)}`;
+    }
+    return value;
+  } else {
+    if (value.length > 12) {
+      return `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5, 8)}/${value.slice(8, 12)}-${value.slice(12)}`;
+    } else if (value.length > 8) {
+      return `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5, 8)}/${value.slice(8)}`;
+    } else if (value.length > 5) {
+      return `${value.slice(0, 2)}.${value.slice(2, 5)}.${value.slice(5)}`;
+    } else if (value.length > 2) {
+      return `${value.slice(0, 2)}.${value.slice(2)}`;
+    }
+    return value;
+  }
+};
 
 export default function SignupView() {
   const [searchParams] = useSearchParams();
@@ -23,6 +63,9 @@ export default function SignupView() {
   const [confirmSenha, setConfirmSenha] = useState('');
   const [telefone, setTelefone] = useState('');
   const [cpfCnpj, setCpfCnpj] = useState('');
+
+  const [showSenha, setShowSenha] = useState(false);
+  const [showConfirmSenha, setShowConfirmSenha] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -209,6 +252,7 @@ export default function SignupView() {
                 <input
                   type="text"
                   required
+                  autoFocus
                   placeholder="Ex: João da Silva"
                   className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                   value={nome}
@@ -263,14 +307,21 @@ export default function SignupView() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showSenha ? 'text' : 'password'}
                     required
                     placeholder="Mínimo 6 dígitos"
-                    className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
+                    className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-10 text-xs text-barber-text-primary placeholder:text-zinc-650"
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
                     disabled={isSaving}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSenha(!showSenha)}
+                    className="absolute right-3 top-3.5 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -279,16 +330,43 @@ export default function SignupView() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showConfirmSenha ? 'text' : 'password'}
                     required
                     placeholder="Repita a senha"
-                    className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
+                    className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-10 text-xs text-barber-text-primary placeholder:text-zinc-650"
                     value={confirmSenha}
                     onChange={(e) => setConfirmSenha(e.target.value)}
                     disabled={isSaving}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmSenha(!showConfirmSenha)}
+                    className="absolute right-3 top-3.5 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    {showConfirmSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
+            </div>
+
+            {/* Password Feedback */}
+            <div className="text-[10px] space-y-1 mt-1 px-1 font-sans">
+              {senha && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${senha.length >= 6 ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  <span className={senha.length >= 6 ? 'text-emerald-400' : 'text-red-400'}>
+                    Mínimo de 6 caracteres
+                  </span>
+                </div>
+              )}
+              {confirmSenha && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${senha === confirmSenha ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  <span className={senha === confirmSenha ? 'text-emerald-400' : 'text-red-400'}>
+                    {senha === confirmSenha ? 'As senhas coincidem' : 'As senhas não coincidem'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Telefone e CPF/CNPJ */}
@@ -302,7 +380,7 @@ export default function SignupView() {
                     placeholder="(00) 90000-0000"
                     className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                     value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
+                    onChange={(e) => setTelefone(formatPhone(e.target.value))}
                     disabled={isSaving}
                   />
                 </div>
@@ -317,7 +395,7 @@ export default function SignupView() {
                     placeholder="000.000.000-00"
                     className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                     value={cpfCnpj}
-                    onChange={(e) => setCpfCnpj(e.target.value)}
+                    onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
                     disabled={isSaving}
                   />
                 </div>

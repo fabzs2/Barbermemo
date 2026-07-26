@@ -1,6 +1,46 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db, supabase } from '../db';
 
+const parseServicosConfig = (config) => {
+  const defaultServices = [
+    { name: 'Corte', duration: 40, price: 'R$ 40,00' },
+    { name: 'Barba', duration: 30, price: 'R$ 30,00' },
+    { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
+    { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
+    { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
+    { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
+  ];
+  if (!config) return defaultServices;
+  if (Array.isArray(config)) return config;
+  return config.services || defaultServices;
+};
+
+const mapUserFromDb = (data) => {
+  if (!data) return null;
+  const hasConfigObject = data.servicos_config && !Array.isArray(data.servicos_config);
+  return {
+    id: data.id,
+    nome: data.nome,
+    email: data.email,
+    barbeariaName: data.barbearia_name,
+    role: data.role,
+    plano: data.plano || (data.role === 'admin' ? 'barbearia' : 'autonomo'),
+    statusAssinatura: data.status_assinatura || 'active',
+    subscriptionId: data.subscription_id || null,
+    cpfCnpj: data.cpf_cnpj || '',
+    asaasCustomerId: data.asaas_customer_id || null,
+    telefone: data.telefone || '',
+    horaInicio: data.hora_inicio || '08:00',
+    horaFim: data.hora_fim || '20:00',
+    modeloAtendimento: data.modelo_atendimento || 'agenda',
+    statusFila: data.status_fila || 'disponivel',
+    servicosConfig: parseServicosConfig(data.servicos_config),
+    themeColor: (hasConfigObject && data.servicos_config.themeColor) || 'amber',
+    templateReminder: (hasConfigObject && data.servicos_config.templateReminder) || '',
+    templateBooking: (hasConfigObject && data.servicos_config.templateBooking) || ''
+  };
+};
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -19,26 +59,7 @@ export function AuthProvider({ children }) {
           .maybeSingle()
           .then(({ data, error }) => {
             if (data && !error) {
-              setCurrentUser({
-                id: data.id,
-                nome: data.nome,
-                email: data.email,
-                barbeariaName: data.barbearia_name,
-                role: data.role,
-                telefone: data.telefone || '',
-                horaInicio: data.hora_inicio || '08:00',
-                horaFim: data.hora_fim || '20:00',
-                modeloAtendimento: data.modelo_atendimento || 'agenda',
-                statusFila: data.status_fila || 'disponivel',
-                servicosConfig: data.servicos_config || [
-                  { name: 'Corte', duration: 40, price: 'R$ 40,00' },
-                  { name: 'Barba', duration: 30, price: 'R$ 30,00' },
-                  { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
-                  { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
-                  { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
-                  { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
-                ]
-              });
+              setCurrentUser(mapUserFromDb(data));
             }
             setAuthLoading(false);
           });
@@ -57,26 +78,7 @@ export function AuthProvider({ children }) {
           .maybeSingle();
         
         if (data && !error) {
-          setCurrentUser({
-            id: data.id,
-            nome: data.nome,
-            email: data.email,
-            barbeariaName: data.barbearia_name,
-            role: data.role,
-            telefone: data.telefone || '',
-            horaInicio: data.hora_inicio || '08:00',
-            horaFim: data.hora_fim || '20:00',
-            modeloAtendimento: data.modelo_atendimento || 'agenda',
-            statusFila: data.status_fila || 'disponivel',
-            servicosConfig: data.servicos_config || [
-              { name: 'Corte', duration: 40, price: 'R$ 40,00' },
-              { name: 'Barba', duration: 30, price: 'R$ 30,00' },
-              { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
-              { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
-              { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
-              { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
-            ]
-          });
+          setCurrentUser(mapUserFromDb(data));
         }
       } else {
         setCurrentUser(null);

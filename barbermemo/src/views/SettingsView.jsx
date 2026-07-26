@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../db';
+import { db, supabase } from '../db';
 import {
   Settings, Clock, Scissors, Plus, Trash2, Edit2, Check, X,
-  Save, ArrowLeft, Info
+  Save, ArrowLeft, Info, Lock, Eye, EyeOff, Palette, MessageSquare, CreditCard, Loader2
 } from 'lucide-react';
 
 const HOURS_RANGE = Array.from({ length: 19 }, (_, i) => {
@@ -37,9 +37,66 @@ export default function SettingsView() {
   const [horaFim, setHoraFim] = useState(currentUser?.horaFim || '20:00');
   const [servicos, setServicos] = useState(() => currentUser?.servicosConfig || []);
 
+  const [themeColor, setThemeColor] = useState(currentUser?.themeColor || 'amber');
+  const [templateReminder, setTemplateReminder] = useState(currentUser?.templateReminder || '');
+  const [templateBooking, setTemplateBooking] = useState(currentUser?.templateBooking || '');
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Alterar Senha states
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
+  const [showSenhaAtual, setShowSenhaAtual] = useState(false);
+  const [showNovaSenha, setShowNovaSenha] = useState(false);
+  const [showConfirmarNovaSenha, setShowConfirmarNovaSenha] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // Asaas Billing states
+  const [billingInfo, setBillingInfo] = useState(null);
+  const [loadingBilling, setLoadingBilling] = useState(false);
+  const [billingError, setBillingError] = useState('');
+
+  // Load billing data on mount
+  useEffect(() => {
+    async function loadBilling() {
+      if (!currentUser?.subscriptionId) return;
+      setLoadingBilling(true);
+      setBillingError('');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`/api/asaas/verify-subscription?subscriptionId=${currentUser.subscriptionId}`);
+        const data = await res.json();
+        
+        if (res.ok) {
+          // Now fetch active payments to get latest invoices
+          const payRes = await fetch(`/api/asaas/verify-subscription?subscriptionId=${currentUser.subscriptionId}`); // Reusing endpoint payload or local mock if sandbox
+          // Query our custom billing-info API
+          const billingRes = await fetch('/api/asaas/billing-info', {
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`
+            }
+          });
+          const billingData = await billingRes.json();
+          if (billingRes.ok) {
+            setBillingInfo(billingData);
+          } else {
+            setBillingError(billingData.error || 'Erro ao carregar faturamento.');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        setBillingError('Erro ao carregar dados de faturamento.');
+      } finally {
+        setLoadingBilling(false);
+      }
+    }
+    loadBilling();
+  }, [currentUser]);
 
   const handlePhoneChange = (e) => {
     setTelefone(formatPhone(e.target.value));
@@ -134,7 +191,10 @@ export default function SettingsView() {
         horaFim,
         modeloAtendimento,
         statusFila,
-        servicosConfig: servicos
+        servicosConfig: servicos,
+        themeColor,
+        templateReminder,
+        templateBooking
       });
 
       setCurrentUser(updatedUser);
@@ -148,6 +208,37 @@ export default function SettingsView() {
       setError('Erro ao salvar configurações no banco de dados.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (novaSenha.length < 6) {
+      setPasswordError('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (novaSenha !== confirmarNovaSenha) {
+      setPasswordError('As senhas digitadas não coincidem.');
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      await db.changePassword(senhaAtual, novaSenha);
+      setPasswordSuccess(true);
+      setSenhaAtual('');
+      setNovaSenha('');
+      setConfirmarNovaSenha('');
+    } catch (err) {
+      console.error(err);
+      setPasswordError(err.message || 'Erro ao redefinir a senha de acesso.');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -409,7 +500,84 @@ export default function SettingsView() {
                 </div>
               )}
             </div>
+          </div>
 
+          {/* Theme Customization Config */}
+          <div className="bg-barber-card border border-barber-border rounded-xl p-5 space-y-4 shadow-md">
+            <div className="flex items-center gap-2 text-barber-accent-light select-none">
+              <Palette className="w-4 h-4" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">Cor de Destaque da Página Pública</h3>
+            </div>
+            <p className="text-[11px] text-zinc-550 leading-relaxed select-none">
+              Escolha a cor de destaque para a sua página pública de agendamento. Seus clientes verão esta cor ao agendar.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-sans">
+              {[
+                { id: 'amber', name: 'Ouro (Padrão)', bg: 'bg-amber-600' },
+                { id: 'emerald', name: 'Esmeralda', bg: 'bg-emerald-600' },
+                { id: 'crimson', name: 'Carmim / Rosa', bg: 'bg-rose-600' },
+                { id: 'blue', name: 'Azul Naval', bg: 'bg-blue-600' }
+              ].map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => setThemeColor(theme.id)}
+                  className={`flex items-center justify-between p-3 rounded-xl border text-[11px] font-bold cursor-pointer transition-all ${
+                    themeColor === theme.id
+                      ? 'border-barber-accent bg-barber-accent/5 text-zinc-100'
+                      : 'border-barber-border bg-zinc-950/20 text-zinc-400 hover:border-zinc-800'
+                  }`}
+                >
+                  <span>{theme.name}</span>
+                  <span className={`w-3 h-3 rounded-full ${theme.bg} border border-white/10 shrink-0 ml-2`}></span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* WhatsApp Templates Config */}
+          <div className="bg-barber-card border border-barber-border rounded-xl p-5 space-y-4 shadow-md">
+            <div className="flex items-center gap-2 text-barber-accent-light select-none">
+              <MessageSquare className="w-4 h-4" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">Modelos de Mensagem do WhatsApp</h3>
+            </div>
+            <p className="text-[11px] text-zinc-555 leading-relaxed select-none">
+              Personalize as mensagens automáticas geradas pelo sistema. Deixe em branco para usar o padrão de fábrica.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">
+                  Lembrete de Retorno (Clientes Sumidos)
+                </label>
+                <textarea
+                  rows={3}
+                  value={templateReminder}
+                  onChange={(e) => setTemplateReminder(e.target.value)}
+                  placeholder={`Ex: Olá, {nome_cliente}! Faz {dias_passados} dias desde o seu último corte. Que tal agendar um novo horário com {nome_barbeiro}?`}
+                  className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 px-3 text-xs text-zinc-200 placeholder:text-zinc-700 font-sans resize-none"
+                />
+                <span className="text-[9px] text-zinc-550 block select-none">
+                  Tags dinâmicas: <code className="text-barber-accent-light font-mono">{`{nome_cliente}`}</code>, <code className="text-barber-accent-light font-mono">{`{dias_passados}`}</code>, <code className="text-barber-accent-light font-mono">{`{nome_barbeiro}`}</code>
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">
+                  Aviso de Agendamento pelo Cliente (Página Pública)
+                </label>
+                <textarea
+                  rows={3}
+                  value={templateBooking}
+                  onChange={(e) => setTemplateBooking(e.target.value)}
+                  placeholder={`Ex: Olá, {nome_barbeiro}! Acabei de solicitar o agendamento de {nome_servico} no dia {data_hora}.`}
+                  className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 px-3 text-xs text-zinc-200 placeholder:text-zinc-700 font-sans resize-none"
+                />
+                <span className="text-[9px] text-zinc-550 block select-none">
+                  Tags dinâmicas: <code className="text-barber-accent-light font-mono">{`{nome_barbeiro}`}</code>, <code className="text-barber-accent-light font-mono">{`{nome_cliente}`}</code>, <code className="text-barber-accent-light font-mono">{`{nome_servico}`}</code>, <code className="text-barber-accent-light font-mono">{`{data_hora}`}</code>
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Feedback Messages */}
@@ -441,7 +609,7 @@ export default function SettingsView() {
             <button
               type="submit"
               disabled={saving || editingIdx !== null}
-              className="flex-1 bg-barber-accent hover:bg-barber-accent-hover text-white py-3 rounded-xl text-xs font-bold disabled:bg-zinc-800 disabled:text-zinc-550 transition-all flex items-center justify-center gap-2 cursor-pointer font-sans shadow-md shadow-barber-accent/15"
+              className="flex-1 bg-barber-accent hover:bg-barber-accent-hover text-white py-3 rounded-xl text-xs font-bold disabled:bg-zinc-800 disabled:text-zinc-555 transition-all flex items-center justify-center gap-2 cursor-pointer font-sans shadow-md shadow-barber-accent/15"
             >
               {saving ? (
                 <>
@@ -458,6 +626,196 @@ export default function SettingsView() {
           </div>
 
         </form>
+
+        {/* Change Password Panel */}
+        <div className="bg-barber-card border border-barber-border rounded-xl p-5 space-y-4 shadow-md font-sans">
+          <div className="flex items-center gap-2 text-barber-accent-light select-none">
+            <Lock className="w-4 h-4" />
+            <h3 className="text-xs font-bold uppercase tracking-wider">Alterar Senha de Acesso</h3>
+          </div>
+          <p className="text-[11px] text-zinc-550 leading-relaxed select-none">
+            Para trocar a sua senha atual de acesso ao sistema, preencha as informações abaixo.
+          </p>
+
+          <form onSubmit={handleUpdatePassword} className="space-y-4 pt-1">
+            {passwordError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 font-sans">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 font-sans">
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                <span>Sua senha foi redefinida com sucesso!</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-400 font-semibold font-sans block">Senha Atual</label>
+                <div className="relative">
+                  <input
+                    type={showSenhaAtual ? 'text' : 'password'}
+                    placeholder="Sua senha atual"
+                    value={senhaAtual}
+                    onChange={(e) => setSenhaAtual(e.target.value)}
+                    className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 pl-3 pr-8 text-xs text-zinc-200"
+                    required
+                    disabled={changingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSenhaAtual(!showSenhaAtual)}
+                    className="absolute right-2 top-2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    {showSenhaAtual ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-400 font-semibold font-sans block">Nova Senha</label>
+                <div className="relative">
+                  <input
+                    type={showNovaSenha ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 pl-3 pr-8 text-xs text-zinc-200"
+                    required
+                    disabled={changingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNovaSenha(!showNovaSenha)}
+                    className="absolute right-2 top-2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    {showNovaSenha ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-400 font-semibold font-sans block">Confirmar Nova Senha</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmarNovaSenha ? 'text' : 'password'}
+                    placeholder="Repita a nova senha"
+                    value={confirmarNovaSenha}
+                    onChange={(e) => setConfirmarNovaSenha(e.target.value)}
+                    className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 pl-3 pr-8 text-xs text-zinc-200"
+                    required
+                    disabled={changingPassword}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmarNovaSenha(!showConfirmarNovaSenha)}
+                    className="absolute right-2 top-2 text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  >
+                    {showConfirmarNovaSenha ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={changingPassword || !senhaAtual || !novaSenha || !confirmarNovaSenha}
+                className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Atualizando...</span>
+                  </>
+                ) : (
+                  <span>Atualizar Minha Senha</span>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Asaas Billing Section */}
+        <div className="bg-barber-card border border-barber-border rounded-xl p-5 space-y-4 shadow-md font-sans">
+          <div className="flex items-center gap-2 text-barber-accent-light select-none">
+            <CreditCard className="w-4 h-4" />
+            <h3 className="text-xs font-bold uppercase tracking-wider">Minha Assinatura & Faturamento</h3>
+          </div>
+          <p className="text-[11px] text-zinc-550 leading-relaxed select-none">
+            Gerencie seu plano mensal do BarberMemo integrado com o Asaas.
+          </p>
+
+          {loadingBilling ? (
+            <div className="flex items-center justify-center py-6 gap-2 text-xs text-zinc-500">
+              <Loader2 className="w-4 h-4 animate-spin text-barber-accent" />
+              <span>Carregando informações financeiras do Asaas...</span>
+            </div>
+          ) : billingError ? (
+            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5" />
+              <span>{billingError}</span>
+            </div>
+          ) : billingInfo ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div className="bg-zinc-950/20 border border-barber-border rounded-xl p-4 text-xs space-y-3">
+                <div className="flex justify-between border-b border-barber-border/30 pb-2">
+                  <span className="text-zinc-550">Plano Atual</span>
+                  <span className="font-bold text-zinc-200 uppercase">{billingInfo.plano === 'barbearia' ? 'Plano Barbearia' : 'Plano Autônomo'}</span>
+                </div>
+                <div className="flex justify-between border-b border-barber-border/30 pb-2">
+                  <span className="text-zinc-555">Valor Mensal</span>
+                  <span className="font-bold text-barber-accent-light">R$ {parseFloat(billingInfo.value).toFixed(2).replace('.', ',')}</span>
+                </div>
+                <div className="flex justify-between border-b border-barber-border/30 pb-2">
+                  <span className="text-zinc-555">Próximo Vencimento</span>
+                  <span className="font-bold text-zinc-200">
+                    {billingInfo.nextDueDate 
+                      ? new Date(billingInfo.nextDueDate + 'T00:00:00').toLocaleDateString('pt-BR') 
+                      : 'Não informado'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-555">Status no Asaas</span>
+                  <span className={`font-bold capitalize ${
+                    ['ACTIVE', 'CONFIRMED', 'RECEIVED'].includes(billingInfo.status) ? 'text-emerald-400' : 'text-amber-500'
+                  }`}>
+                    {['ACTIVE', 'CONFIRMED', 'RECEIVED'].includes(billingInfo.status) ? 'Ativo / Pago' : 'Aguardando Pagamento'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-center space-y-3">
+                <p className="text-[10px] text-zinc-400 leading-normal">
+                  Sua mensalidade é gerenciada de forma segura e automatizada. Você pode efetuar pagamentos, gerar boletos, copiar código PIX ou pagar com cartão clicando no botão abaixo.
+                </p>
+
+                {billingInfo.invoiceUrl ? (
+                  <a
+                    href={billingInfo.invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all text-center shadow-lg shadow-emerald-950/20"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Acessar Fatura / Pagar Mensalidade
+                  </a>
+                ) : (
+                  <div className="text-[10.5px] text-zinc-500 italic text-center py-2 border border-dashed border-barber-border rounded-xl">
+                    Nenhuma fatura pendente encontrada.
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 text-center border border-dashed border-barber-border rounded-xl text-zinc-550 text-xs">
+              Nenhuma assinatura ativa encontrada para este perfil.
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

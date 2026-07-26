@@ -24,7 +24,13 @@ export default function BarberDashboard() {
       alert("Telefone inválido.");
       return;
     }
-    const text = `Olá, ${client.nome}! Tudo bem? Sentimos sua falta aqui na barbearia. 💈 Faz ${item.diasPassados} dias desde o seu último corte. Que tal darmos aquele trato no visual? Podemos agendar um horário! Abraço!`;
+    const defaultMsg = `Olá, {nome_cliente}! Tudo bem? Sentimos sua falta aqui na barbearia. 💈 Faz {dias_passados} dias desde o seu último corte. Que tal darmos aquele trato no visual? Podemos agendar um horário! Abraço!`;
+    const template = currentUser?.templateReminder?.trim() || defaultMsg;
+    const text = template
+      .replace(/{nome_cliente}/g, client.nome)
+      .replace(/{dias_passados}/g, item.diasPassados)
+      .replace(/{nome_barbeiro}/g, currentUser.nome);
+
     window.open(`https://api.whatsapp.com/send?phone=55${phone}&text=${encodeURIComponent(text)}`, '_blank');
   };
 

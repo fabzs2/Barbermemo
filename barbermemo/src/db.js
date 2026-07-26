@@ -17,8 +17,23 @@ function base64ToBlob(base64, mimeType) {
 }
 
 // Mappers to transform snake_case database schema to camelCase frontend schema
+const parseServicosConfig = (config) => {
+  const defaultServices = [
+    { name: 'Corte', duration: 40, price: 'R$ 40,00' },
+    { name: 'Barba', duration: 30, price: 'R$ 30,00' },
+    { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
+    { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
+    { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
+    { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
+  ];
+  if (!config) return defaultServices;
+  if (Array.isArray(config)) return config;
+  return config.services || defaultServices;
+};
+
 const mapUser = (u) => {
   if (!u) return null;
+  const hasConfigObject = u.servicos_config && !Array.isArray(u.servicos_config);
   return {
     id: u.id,
     nome: u.nome,
@@ -35,14 +50,10 @@ const mapUser = (u) => {
     horaFim: u.hora_fim || '20:00',
     modeloAtendimento: u.modelo_atendimento || 'agenda',
     statusFila: u.status_fila || 'disponivel',
-    servicosConfig: u.servicos_config || [
-      { name: 'Corte', duration: 40, price: 'R$ 40,00' },
-      { name: 'Barba', duration: 30, price: 'R$ 30,00' },
-      { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
-      { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
-      { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
-      { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
-    ]
+    servicosConfig: parseServicosConfig(u.servicos_config),
+    themeColor: (hasConfigObject && u.servicos_config.themeColor) || 'amber',
+    templateReminder: (hasConfigObject && u.servicos_config.templateReminder) || '',
+    templateBooking: (hasConfigObject && u.servicos_config.templateBooking) || ''
   };
 };
 
@@ -104,6 +115,30 @@ export const db = {
 
     if (error) throw error;
     return mapUser(data);
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) {
+      throw new Error('Sessão expirada. Por favor, faça login novamente.');
+    }
+    const email = session.user.email;
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password: currentPassword
+    });
+
+    if (verifyError) {
+      throw new Error('A senha atual digitada está incorreta.');
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (updateError) throw updateError;
+    return true;
   },
 
   registerUserFromSubscription: async ({ nome, email, senha, plano, barbeariaName, cpfCnpj, telefone, subscriptionId }) => {
@@ -808,6 +843,22 @@ export const db = {
   },
 
   updateBarberConfig: async (barberId, config) => {
+    const { data: existingUser } = await supabase
+      .from('usuarios')
+      .select('servicos_config')
+      .eq('id', barberId)
+      .maybeSingle();
+
+    const existingConfig = existingUser?.servicos_config || {};
+    const existingIsArray = Array.isArray(existingConfig);
+
+    const servicosConfigData = {
+      services: config.servicosConfig !== undefined ? config.servicosConfig : (existingIsArray ? existingConfig : existingConfig.services),
+      themeColor: config.themeColor !== undefined ? config.themeColor : (existingIsArray ? 'amber' : (existingConfig.themeColor || 'amber')),
+      templateReminder: config.templateReminder !== undefined ? config.templateReminder : (existingIsArray ? '' : (existingConfig.templateReminder || '')),
+      templateBooking: config.templateBooking !== undefined ? config.templateBooking : (existingIsArray ? '' : (existingConfig.templateBooking || ''))
+    };
+
     const { data, error } = await supabase
       .from('usuarios')
       .update({
@@ -816,7 +867,7 @@ export const db = {
         hora_fim: config.horaFim,
         modelo_atendimento: config.modeloAtendimento,
         status_fila: config.statusFila,
-        servicos_config: config.servicosConfig
+        servicos_config: servicosConfigData
       })
       .eq('id', barberId)
       .select()

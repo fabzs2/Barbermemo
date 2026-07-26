@@ -15,9 +15,33 @@ const SERVICES = [
   { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
 ];
 
+const themeColors = {
+  amber: {
+    accent: '#d97706',
+    hover: '#b45309',
+    light: '#f59e0b'
+  },
+  emerald: {
+    accent: '#10b981',
+    hover: '#047857',
+    light: '#34d399'
+  },
+  crimson: {
+    accent: '#e11d48',
+    hover: '#be123c',
+    light: '#fb7185'
+  },
+  blue: {
+    accent: '#2563eb',
+    hover: '#1d4ed8',
+    light: '#60a5fa'
+  }
+};
+
 // Helper to determine service duration dynamically
 const getServiceDuration = (serviceName, customServices) => {
-  const services = customServices || [];
+  const rawServices = customServices;
+  const services = Array.isArray(rawServices) ? rawServices : (rawServices?.services || []);
   const found = services.find(s => s.name === serviceName);
   return found ? parseInt(found.duration, 10) : 40;
 };
@@ -49,6 +73,10 @@ export default function PublicBookingView() {
   const [showQueueJoinModal, setShowQueueJoinModal] = useState(false);
   const [trackingAppointment, setTrackingAppointment] = useState(null);
 
+  const rawConfig = barberInfo?.servicos_config;
+  const themeColorId = (!Array.isArray(rawConfig) && rawConfig?.themeColor) || 'amber';
+  const selectedTheme = themeColors[themeColorId] || themeColors.amber;
+
   // Fetch barber details on mount
   useEffect(() => {
     async function fetchBarber() {
@@ -60,7 +88,8 @@ export default function PublicBookingView() {
         } else {
           setBarberInfo(data);
           setSelectedBarberId(barberId);
-          const services = data.servicos_config || SERVICES;
+          const rawServices = data.servicos_config;
+          const services = Array.isArray(rawServices) ? rawServices : (rawServices?.services || SERVICES);
           if (services.length > 0) {
             setSelectedService(services[0].name);
           }
@@ -123,7 +152,8 @@ export default function PublicBookingView() {
 
   // Check if slot overlaps with any existing appointment
   const isTimeSlotBooked = (timeStr) => {
-    const services = barberInfo?.servicos_config || SERVICES;
+    const rawServices = barberInfo?.servicos_config;
+    const services = Array.isArray(rawServices) ? rawServices : (rawServices?.services || SERVICES);
     const slotStart = new Date(`${selectedDate}T${timeStr}:00`);
     const slotDuration = getServiceDuration(selectedService, services);
     const slotEnd = new Date(slotStart.getTime() + slotDuration * 60 * 1000);
@@ -303,18 +333,22 @@ export default function PublicBookingView() {
       if (positionInLine !== null) {
         const frontPeople = waitingList.slice(0, myIndexInWaiting);
         estimatedWait = frontPeople.reduce((acc, app) => {
-          const d = (targetBarber?.servicos_config || []).find(s => s.name === app.servicos)?.duration || 40;
+          const rawS = targetBarber?.servicos_config;
+          const services = Array.isArray(rawS) ? rawS : (rawS?.services || []);
+          const d = services.find(s => s.name === app.servicos)?.duration || 40;
           return acc + d;
         }, 0);
         
         const activeApp = queueList.find(app => app.status === 'Confirmado');
         if (activeApp) {
-          estimatedWait += (targetBarber?.servicos_config || []).find(s => s.name === activeApp.servicos)?.duration || 40;
+          const rawS = targetBarber?.servicos_config;
+          const services = Array.isArray(rawS) ? rawS : (rawS?.services || []);
+          estimatedWait += services.find(s => s.name === activeApp.servicos)?.duration || 40;
         }
       }
 
       return (
-        <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none">
+        <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none" style={{ '--color-barber-accent': selectedTheme.accent, '--color-barber-accent-hover': selectedTheme.hover, '--color-barber-accent-light': selectedTheme.light }}>
           <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl p-6 text-center space-y-6 shadow-2xl fade-in">
             {currentStatus === 'Confirmado' ? (
               <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto text-emerald-400 animate-bounce">
@@ -413,7 +447,7 @@ export default function PublicBookingView() {
     }
 
     return (
-      <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex flex-col items-center justify-center gap-4 select-none">
+        <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex flex-col items-center justify-center gap-4 select-none" style={{ '--color-barber-accent': selectedTheme.accent, '--color-barber-accent-hover': selectedTheme.hover, '--color-barber-accent-light': selectedTheme.light }}>
         <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl shadow-xl overflow-hidden fade-in flex flex-col">
           
           <div className="p-5 border-b border-barber-border bg-barber-dark/40 flex items-center gap-3">
@@ -435,8 +469,10 @@ export default function PublicBookingView() {
                   const queueList = barbersQueues[barber.id] || [];
                   const waitingCount = queueList.filter(app => app.status === 'Pendente').length;
                   
+                  const rawS = barber.servicos_config;
+                  const services = Array.isArray(rawS) ? rawS : (rawS?.services || []);
                   const waitTime = queueList.filter(app => app.status === 'Pendente').reduce((acc, app) => {
-                    const d = (barber.servicos_config || []).find(s => s.name === app.servicos)?.duration || 40;
+                    const d = services.find(s => s.name === app.servicos)?.duration || 40;
                     return acc + d;
                   }, 0) + (queueList.find(app => app.status === 'Confirmado') ? 30 : 0);
 
@@ -544,7 +580,11 @@ export default function PublicBookingView() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Selecione o Serviço</label>
               <div className="grid grid-cols-2 gap-2">
-                {((shopBarbers.find(b => b.id === selectedBarberId) || barberInfo)?.servicos_config || SERVICES).map((service) => (
+                {(() => {
+                  const bInfo = shopBarbers.find(b => b.id === selectedBarberId) || barberInfo;
+                  const rawS = bInfo?.servicos_config;
+                  return Array.isArray(rawS) ? rawS : (rawS?.services || SERVICES);
+                })().map((service) => (
                   <div
                     key={service.name}
                     onClick={() => setSelectedService(service.name)}
@@ -613,7 +653,7 @@ export default function PublicBookingView() {
   // Success Screen
   if (successData) {
     return (
-      <div className="min-h-screen bg-barber-dark text-barber-text-primary flex flex-col items-center justify-center p-4 font-sans select-none">
+      <div className="min-h-screen bg-barber-dark text-barber-text-primary flex flex-col items-center justify-center p-4 font-sans select-none" style={{ '--color-barber-accent': selectedTheme.accent, '--color-barber-accent-hover': selectedTheme.hover, '--color-barber-accent-light': selectedTheme.light }}>
         <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl p-6 text-center space-y-6 shadow-2xl fade-in">
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto text-emerald-400">
             <CheckCircle2 className="w-8 h-8" />
@@ -655,7 +695,15 @@ export default function PublicBookingView() {
           <div className="space-y-3 pt-2">
             <button
               onClick={() => {
-                const message = `Olá, ${barberInfo.nome}! Acabei de solicitar um agendamento pelo link:\n\n- *Cliente:* ${clientName}\n- *Serviço:* ${selectedService}\n- *Data/Hora:* ${successData.dateFormatted} às ${successData.time}\n\nPor favor, confirme no seu painel!`;
+                const defaultMsg = `Olá, {nome_barbeiro}! Acabei de solicitar um agendamento pelo link:\n\n- *Cliente:* {nome_cliente}\n- *Serviço:* {nome_servico}\n- *Data/Hora:* {data_hora}\n\nPor favor, confirme no seu painel!`;
+                const customBookingTemplate = (!Array.isArray(rawConfig) && rawConfig?.templateBooking) || '';
+                const template = customBookingTemplate.trim() || defaultMsg;
+                const message = template
+                  .replace(/{nome_barbeiro}/g, barberInfo.nome)
+                  .replace(/{nome_cliente}/g, clientName)
+                  .replace(/{nome_servico}/g, selectedService)
+                  .replace(/{data_hora}/g, `${successData.dateFormatted} às ${successData.time}`);
+
                 const barberPhone = barberInfo.telefone ? barberInfo.telefone.replace(/\D/g, '') : '';
                 const cleanPhone = barberPhone.startsWith('55') ? barberPhone : `55${barberPhone}`;
                 const url = barberPhone
@@ -687,7 +735,7 @@ export default function PublicBookingView() {
   }
 
   return (
-    <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none">
+    <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none" style={{ '--color-barber-accent': selectedTheme.accent, '--color-barber-accent-hover': selectedTheme.hover, '--color-barber-accent-light': selectedTheme.light }}>
       <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl shadow-xl overflow-hidden fade-in flex flex-col">
         
         {/* Header Banner */}
@@ -712,7 +760,10 @@ export default function PublicBookingView() {
               1. Selecione o Serviço
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {(barberInfo?.servicos_config || SERVICES).map((service) => (
+              {(() => {
+                const rawS = barberInfo?.servicos_config;
+                return Array.isArray(rawS) ? rawS : (rawS?.services || SERVICES);
+              })().map((service) => (
                 <div
                   key={service.name}
                   onClick={() => setSelectedService(service.name)}
