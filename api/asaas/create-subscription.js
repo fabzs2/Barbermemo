@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     res.status(200).json({
       subscriptionId: subscription.id,
       customerId: customer.id,
-      invoiceUrl: invoiceUrl || `https://sandbox.asaas.com/subscriptions/${subscription.id}`,
+      invoiceUrl: invoiceUrl || `https://www.asaas.com/subscriptions/${subscription.id}`,
       plano: planoClean,
       valor: valorMensal
     });

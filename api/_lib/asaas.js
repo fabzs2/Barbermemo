@@ -1,5 +1,5 @@
 export async function asaasFetch(path, options = {}) {
-  const apiUrl = process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
+  const apiUrl = process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://www.asaas.com/api/v3';
   const apiKey = (process.env.ASAAS_API_KEY || process.env.VITE_ASAAS_API_KEY || '').trim();
 
   const res = await fetch(`${apiUrl}${path}`, {
