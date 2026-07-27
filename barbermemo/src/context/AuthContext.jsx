@@ -47,6 +47,9 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(
+    () => sessionStorage.getItem('isPasswordRecovery') === 'true'
+  );
 
   useEffect(() => {
     // Get active session on startup
@@ -70,6 +73,11 @@ export function AuthProvider({ children }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        sessionStorage.setItem('isPasswordRecovery', 'true');
+        setIsPasswordRecovery(true);
+      }
+
       if (session && session.user) {
         const { data, error } = await supabase
           .from('usuarios')
@@ -115,13 +123,15 @@ export function AuthProvider({ children }) {
     try {
       await supabase.auth.signOut();
       setCurrentUser(null);
+      sessionStorage.removeItem('isPasswordRecovery');
+      setIsPasswordRecovery(false);
     } catch (err) {
       console.error("Erro ao fazer logout:", err);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser, authLoading, authError, setAuthError, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, authLoading, authError, setAuthError, login, logout, isPasswordRecovery, setIsPasswordRecovery }}>
       {children}
     </AuthContext.Provider>
   );

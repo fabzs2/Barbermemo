@@ -17,6 +17,7 @@ import SettingsView from './views/SettingsView';
 import QueueDashboard from './views/QueueDashboard';
 import CheckoutView from './views/CheckoutView';
 import SignupView from './views/SignupView';
+import ResetPasswordView from './views/ResetPasswordView';
 
 const ScheduleRouteWrapper = () => {
   const { currentUser } = useAuth();
@@ -24,7 +25,7 @@ const ScheduleRouteWrapper = () => {
 };
 
 function AppRoutes() {
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, authLoading, isPasswordRecovery } = useAuth();
 
   if (authLoading) {
     return (
@@ -39,6 +40,7 @@ function AppRoutes() {
     <Routes>
       {/* Auth Routes */}
       <Route path="/login" element={<LoginView />} />
+      <Route path="/reset-password" element={<ResetPasswordView />} />
       <Route path="/checkout" element={<CheckoutView />} />
       <Route path="/cadastrar" element={<SignupView />} />
       <Route path="/cadastro" element={<SignupView />} />
@@ -52,7 +54,11 @@ function AppRoutes() {
         path="/admin"
         element={
           currentUser?.role === 'admin' ? (
-            <AdminDashboard />
+            isPasswordRecovery ? (
+              <Navigate to="/reset-password" replace />
+            ) : (
+              <AdminDashboard />
+            )
           ) : (
             <Navigate to="/login" replace />
           )
@@ -64,7 +70,11 @@ function AppRoutes() {
         path="/"
         element={
           currentUser && currentUser.role !== 'admin' ? (
-            <BarberLayout />
+            isPasswordRecovery ? (
+              <Navigate to="/reset-password" replace />
+            ) : (
+              <BarberLayout />
+            )
           ) : (
             <Navigate to="/login" replace />
           )
