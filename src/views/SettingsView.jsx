@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../db';
+import { db, supabase } from '../db';
 import {
   Settings, Clock, Scissors, Plus, Trash2, Edit2, Check, X,
-  Save, ArrowLeft, Info
+  Save, ArrowLeft, Info, Lock
 } from 'lucide-react';
 
 const HOURS_RANGE = Array.from({ length: 19 }, (_, i) => {
@@ -40,6 +40,42 @@ export default function SettingsView() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Password change state
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (novaSenha.length < 6) {
+      setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (novaSenha !== confirmarNovaSenha) {
+      setPasswordError('As senhas não coincidem.');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password: novaSenha });
+      if (updateError) throw updateError;
+      setPasswordSuccess(true);
+      setNovaSenha('');
+      setConfirmarNovaSenha('');
+    } catch (err) {
+      console.error(err);
+      setPasswordError('Não foi possível alterar a senha. Tente novamente.');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handlePhoneChange = (e) => {
     setTelefone(formatPhone(e.target.value));
@@ -457,6 +493,60 @@ export default function SettingsView() {
             </button>
           </div>
 
+        </form>
+
+        {/* Change Password */}
+        <form onSubmit={handleChangePassword} className="bg-barber-card border border-barber-border rounded-xl p-5 space-y-4 shadow-md">
+          <div className="flex items-center gap-2 text-barber-accent-light select-none">
+            <Lock className="w-4 h-4" />
+            <h3 className="text-xs font-bold uppercase tracking-wider">Alterar Senha</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Nova Senha</label>
+              <input
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 px-3 text-xs text-zinc-200 placeholder:text-zinc-700"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Confirmar Nova Senha</label>
+              <input
+                type="password"
+                placeholder="Repita a senha"
+                value={confirmarNovaSenha}
+                onChange={(e) => setConfirmarNovaSenha(e.target.value)}
+                className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 px-3 text-xs text-zinc-200 placeholder:text-zinc-700"
+              />
+            </div>
+          </div>
+
+          {passwordError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+              <Info className="w-3.5 h-3.5 shrink-0" />
+              <span>{passwordError}</span>
+            </div>
+          )}
+
+          {passwordSuccess && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+              <Check className="w-3.5 h-3.5 shrink-0" />
+              <span>Senha alterada com sucesso!</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={changingPassword}
+            className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-4 py-2 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            {changingPassword ? 'Salvando...' : 'Salvar Nova Senha'}
+          </button>
         </form>
 
       </div>

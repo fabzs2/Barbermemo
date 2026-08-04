@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import LoginView from './views/LoginView';
+import UpdatePasswordView from './views/UpdatePasswordView';
 import AdminDashboard from './views/AdminDashboard';
 import BarberLayout from './views/BarberLayout';
 import BarberDashboard from './views/BarberDashboard';
@@ -37,6 +38,7 @@ function AppRoutes() {
     <Routes>
       {/* Auth Route */}
       <Route path="/login" element={<LoginView />} />
+      <Route path="/redefinir-senha" element={<UpdatePasswordView />} />
 
       {/* Public Booking Route */}
       <Route path="/agendar/:barberId" element={<PublicBookingView />} />
