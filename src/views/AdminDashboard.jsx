@@ -372,7 +372,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">CPF/CNPJ (para Asaas)</label>
+                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">CPF/CNPJ</label>
                       <div className="relative">
                         <IdCard className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
                         <input
@@ -382,7 +382,6 @@ export default function AdminDashboard() {
                           onChange={(e) => setAdminBarberForm({ ...adminBarberForm, cpfCnpj: formatCpfCnpj(e.target.value) })}
                         />
                       </div>
-                      <p className="text-[10px] text-zinc-550 font-sans">Necessário para o Asaas emitir cobrança via boleto ou Pix.</p>
                     </div>
 
                     <div className="md:col-span-2 pt-2 flex gap-3">
