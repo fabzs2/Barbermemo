@@ -116,7 +116,11 @@ export const db = {
 
   adminAddBarbeiro: async (barber) => {
     const cleanEmail = barber.email.toLowerCase().trim();
-    
+
+    if (!barber.cpfCnpj || !barber.cpfCnpj.replace(/\D/g, '')) {
+      throw new Error("Informe o CPF do barbeiro.");
+    }
+
     // Check if email already exists in public.usuarios
     const { data: existing, error: checkError } = await supabase
       .from('usuarios')
@@ -213,6 +217,10 @@ export const db = {
   adminUpdateBarbeiro: async (id, fields) => {
     const cleanEmail = fields.email.toLowerCase().trim();
 
+    if (!fields.cpfCnpj || !fields.cpfCnpj.replace(/\D/g, '')) {
+      throw new Error("Informe o CPF do barbeiro.");
+    }
+
     // Check if email is in use by another user
     const { data: existing, error: checkError } = await supabase
       .from('usuarios')
@@ -258,6 +266,24 @@ export const db = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao sincronizar barbeiro com o Asaas.');
     return mapUser(data.barbeiro);
+  },
+
+  adminGrantTrial: async (barberId, trialDays = 7) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Sessão expirada. Faça login novamente.');
+
+    const res = await fetch('/api/asaas/grant-trial', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ barberId, trialDays })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao conceder trial ao barbeiro.');
+    return data;
   },
 
   adminSyncAllBarbeirosAsaas: async () => {

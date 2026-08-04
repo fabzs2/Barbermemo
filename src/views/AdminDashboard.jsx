@@ -5,7 +5,7 @@ import { db } from '../db';
 import {
   Users, BarChart3, Plus, Edit2, Trash2, Mail, Store, User,
   LockKeyhole, LogOut, AlertCircle, ShieldAlert, Calendar,
-  UserCheck, Scissors, IdCard, RefreshCw, CheckCircle2, XCircle
+  UserCheck, Scissors, IdCard, RefreshCw, CheckCircle2, XCircle, Gift
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -32,6 +32,7 @@ export default function AdminDashboard() {
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncAllResult, setSyncAllResult] = useState(null);
   const [syncError, setSyncError] = useState('');
+  const [grantingTrialId, setGrantingTrialId] = useState(null);
 
   // CPF/CNPJ formatting helper (accepts either 11 or 14 digits)
   const formatCpfCnpj = (val) => {
@@ -128,6 +129,19 @@ export default function AdminDashboard() {
       setSyncError(err.message);
     } finally {
       setSyncingBarberId(null);
+    }
+  };
+
+  const handleGrantTrial = async (barber) => {
+    if (!confirm(`Conceder 7 dias grátis para ${barber.nome}? A próxima cobrança da assinatura no Asaas será adiada para daqui a 7 dias.`)) return;
+    setSyncError('');
+    setGrantingTrialId(barber.id);
+    try {
+      await db.adminGrantTrial(barber.id, 7);
+    } catch (err) {
+      setSyncError(err.message);
+    } finally {
+      setGrantingTrialId(null);
     }
   };
 
@@ -362,7 +376,7 @@ export default function AdminDashboard() {
                       <div className="relative">
                         <IdCard className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
                         <input
-                          type="text" placeholder="Ex: 123.456.789-00"
+                          type="text" required placeholder="Ex: 123.456.789-00"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
                           value={adminBarberForm.cpfCnpj}
                           onChange={(e) => setAdminBarberForm({ ...adminBarberForm, cpfCnpj: formatCpfCnpj(e.target.value) })}
@@ -431,6 +445,16 @@ export default function AdminDashboard() {
                               >
                                 <RefreshCw className={`w-3.5 h-3.5 ${syncingBarberId === b.id ? 'animate-spin' : ''}`} />
                               </button>
+                              {b.asaasCustomerId && (
+                                <button
+                                  onClick={() => handleGrantTrial(b)}
+                                  disabled={grantingTrialId === b.id}
+                                  title="Conceder 7 dias grátis"
+                                  className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-barber-accent-light transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                  <Gift className={`w-3.5 h-3.5 ${grantingTrialId === b.id ? 'animate-pulse' : ''}`} />
+                                </button>
+                              )}
                             </div>
                           </td>
                           <td className="py-4 px-4">

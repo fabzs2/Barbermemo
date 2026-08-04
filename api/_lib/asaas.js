@@ -54,3 +54,18 @@ export async function upsertAsaasCustomer(cliente) {
   });
 }
 
+// Lists subscriptions linked to an Asaas customer.
+export async function getSubscriptionsByCustomer(customerId) {
+  const data = await asaasFetch(`/subscriptions?customer=${encodeURIComponent(customerId)}`);
+  return data?.data || [];
+}
+
+// Pushes a subscription's next charge date out, used to grant a free trial
+// window on an already-created subscription (Asaas has no separate trial field).
+export async function updateSubscriptionNextDueDate(subscriptionId, nextDueDate) {
+  return asaasFetch(`/subscriptions/${subscriptionId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ nextDueDate })
+  });
+}
+
