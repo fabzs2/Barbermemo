@@ -32,10 +32,7 @@
   "functions": {
     "api/operations.js": {
       "maxDuration": 300,
-      "includeFiles": [
-        "scripts/certs/supabase-root.crt",
-        "node_modules/@electric-sql/pglite/dist/**"
-      ]
+      "includeFiles": "{scripts/certs/supabase-root.crt,node_modules/@electric-sql/pglite/dist/**}"
     }
   }
 }
