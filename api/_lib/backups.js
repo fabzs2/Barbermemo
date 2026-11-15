@@ -12,9 +12,10 @@ async function readPrivate(path) {
 }
 export async function runBackup({verifyRestore=false,admin=createServiceClient()}={}) {
  const job=randomUUID();
- if(!unwrap(await admin.rpc('claim_ops_job',{p_key:'backup',p_token:job,p_seconds:900})))throw new Error('Another backup is running.');
- let client,snapshot,stage='connect';
+ let client,snapshot,locked=false,stage='claim';
  try {
+  if(!unwrap(await admin.rpc('claim_ops_job',{p_key:'backup',p_token:job,p_seconds:900})))throw new Error('Another backup is running.');
+  locked=true;stage='connect';
   client=await connectDatabase();if(!client)throw new Error('Database not configured for backup.');
   stage='database_snapshot';snapshot=await collectDatabaseSnapshot(client);
   stage='photo_download';const metadata=snapshot.storageObjects;
@@ -47,6 +48,6 @@ export async function runBackup({verifyRestore=false,admin=createServiceClient()
   const old=existing.sort((a,b)=>new Date(b.uploadedAt)-new Date(a.uploadedAt)).slice(14).filter(x=>x.pathname.startsWith(PREFIX)&&x.pathname!==pathname);
   if(old.length)await del(old.map(x=>x.url));
   return {...details,restore};
- }catch(error){const code=/^[A-Za-z0-9_]{1,60}$/.test(error.code||error.name)?error.code||error.name:'unknown';console.error('backup.failed',stage,code);await admin.from('service_status').upsert({key:'backup_attempt',success:false,checked_at:new Date().toISOString(),details:{code,stage}}).catch(()=>{});throw error;}
- finally{if(client)await client.end();await admin.rpc('release_ops_job',{p_key:'backup',p_token:job});}
+ }catch(error){const code=/^[A-Za-z0-9_]{1,60}$/.test(error.code||error.name)?error.code||error.name:'unknown';console.error('backup.failed',stage,code);await Promise.resolve(admin.from('service_status').upsert({key:'backup_attempt',success:false,checked_at:new Date().toISOString(),details:{code,stage}})).catch(()=>{});throw error;}
+ finally{if(client)await client.end();if(locked)await admin.rpc('release_ops_job',{p_key:'backup',p_token:job});}
 }
