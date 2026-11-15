@@ -97,3 +97,9 @@ test('normalizes retired Asaas hosts to the official API endpoints without chang
   process.env.ASAAS_API_URL='https://unrelated.invalid';assert.throws(asaasApiUrl);
  }finally{if(previous===undefined)delete process.env.ASAAS_API_URL;else process.env.ASAAS_API_URL=previous;}
 });
+
+test('provider authentication failure is reported as configuration failure instead of blaming payer data',async()=>{
+ const h=harness();h.provider=async()=>{const error=new Error('Invalid API key');error.status=401;throw error;};
+ await assert.rejects(run(h),error=>error.status===502&&error.message.includes('configuração'));
+ assert.equal(h.workspace.status,'pilot');
+});

@@ -100,6 +100,8 @@ export async function activateWorkspaceBilling({admin,actor,workspace,body,provi
     const definitive=error.status>=400 && error.status<500 && ![408,409,429].includes(error.status) && !(error instanceof AccessError);
     try { await progress(definitive?'rejected':'uncertain',{stage}); } catch { console.error('billing.failure_state_update_failed'); }
     if(error instanceof AccessError)throw error;
+    if([401,403].includes(error.status))throw new AccessError('O Asaas recusou a configuração de acesso. Confira a chave de API de produção na Vercel.',502);
+    if(error.status===404)throw new AccessError('O cadastro ou a assinatura vinculada não foi encontrado no Asaas. Revise o vínculo antes de ativar.',409);
     if(definitive)throw new AccessError('O Asaas recusou os dados. Confira CPF/CNPJ, telefone e vencimento e tente novamente.',422);
     throw new AccessError('Não foi possível confirmar a ativação no Asaas. Use Conferir ativação antes de tentar criar outra cobrança.',502);
   }
