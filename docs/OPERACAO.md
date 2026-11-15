@@ -35,3 +35,7 @@ Limites atuais: 40 MiB de fotos e 64 MiB de conteúdo total antes da compactaç�
 5. Verifique login, recuperação, RLS entre duas barbearias, fotos, agendamento e sincronização financeira antes de apontar a aplicação ao ambiente restaurado. Usuários precisarão entrar novamente.
 
 O teste automatizado comprova a restauração isolada do conteúdo coberto; não substitui um exercício de recuperação de toda a infraestrutura.
+
+## Verificação em produção — 15/11/2026
+
+Entrega de recuperação confirmada como `delivered` no Resend, remetente `acesso@barbermemo.com.br`. Webhook do Asaas cadastrado e autenticação da rota testada (401 sem token e 200 para evento irrelevante autenticado). Backup privado de 844.580 bytes autenticado e restaurado: 18 tabelas, 59 linhas e 9 fotos, todas conferidas. Buckets temporários e contas de teste removidos; nenhuma cobrança, troca ou cancelamento real foi executado nos testes financeiros. Migrações, RLS e fluxo financeiro foram verificados com banco/Auth reais e transporte Asaas simulado.
