@@ -25,3 +25,9 @@ A chave `SUPABASE_SERVICE_ROLE_KEY` (ou `SUPABASE_SECRET_KEY`) é exclusivamente
 A migração fecha as políticas públicas antigas. Agendamento público usa projeções RPC mínimas. Acompanhamento exige token aleatório próprio; o ID público do agendamento não concede esse acesso. Fotos ficam em bucket privado, com URLs assinadas por uma hora; URLs públicas antigas são convertidas ao carregar a ficha.
 
 Depois que a migração for aplicada, evite rollback para versões antigas da interface: elas dependiam do modelo e das políticas anteriores. Prefira correções que mantenham o isolamento. Não reabra políticas públicas para resolver incompatibilidades.
+
+## Recuperação de senha no domínio público
+
+O cliente usa `https://www.barbermemo.com.br/redefinir-senha` para todos os pedidos, inclusive quando o login é aberto em um endereço de deployment. O Supabase precisa permitir esse endereço em **Authentication → URL Configuration → Redirect URLs**. Configure também **Site URL** como `https://www.barbermemo.com.br`. No template **Reset password**, o link deve usar `{{ .ConfirmationURL }}`, sem URL fixa de deployment. Esses valores são configurações do serviço Auth, não do banco PostgreSQL.
+
+O build de produção verifica a URL de retorno efetiva do GoTrue e o uso de um token de recuperação com uma conta descartável; não envia e-mails e remove a conta ao terminar. E-mails anteriores podem conter a URL antiga: após corrigir as configurações, solicite um novo link pelo domínio público.

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm test && vite build && node scripts/upload-sourcemaps.mjs && node scripts/migrate-tenancy.mjs && node scripts/verify-provisioning.mjs",
+    "build": "npm test && vite build && node scripts/upload-sourcemaps.mjs && node scripts/migrate-tenancy.mjs && node scripts/verify-provisioning.mjs && node scripts/verify-recovery.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "test:monitoring": "node --test tests/monitoring.test.js",

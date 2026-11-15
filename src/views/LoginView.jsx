@@ -1,3 +1,4 @@
+import { requestPasswordRecovery } from '../auth/recovery.js';
 import { homeFor } from '../domain/access.js';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -27,10 +28,7 @@ export default function LoginView() {
     setAuthError('');
     setForgotSending(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${window.location.origin}/redefinir-senha`
-      });
-      if (error) throw error;
+      await requestPasswordRecovery(supabase, forgotEmail);
       setForgotSent(true);
     } catch (err) {
       console.error(err);
