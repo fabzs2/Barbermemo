@@ -17,14 +17,14 @@ export async function runBackup({verifyRestore=false,admin=createServiceClient()
  try {
   client=await connectDatabase();if(!client)throw new Error('Database not configured for backup.');
   snapshot=await collectDatabaseSnapshot(client);
-  const metadata=(await client.query("select bucket_id,name,metadata->>'mimetype' as content_type from storage.objects where bucket_id='barbermemo-photos' order by name")).rows;
+  const metadata=snapshot.storageObjects;
   const buckets=await admin.storage.getBucket('barbermemo-photos');if(buckets.error)throw buckets.error;
   snapshot.buckets=[{id:buckets.data.id,name:buckets.data.name,public:false,fileSizeLimit:buckets.data.file_size_limit,allowedMimeTypes:buckets.data.allowed_mime_types}];
   snapshot.photos=[];let total=0;
   for(const object of metadata) {
    const download=await admin.storage.from(object.bucket_id).download(object.name);if(download.error)throw download.error;
    const data=Buffer.from(await download.data.arrayBuffer());total+=data.length;if(total>40*1024*1024)throw new Error('Photo backup exceeds safe size; increase backup capacity before growth.');
-   snapshot.photos.push({bucket:object.bucket_id,name:object.name,contentType:object.content_type,sha256:sha256(data),size:data.length,data:data.toString('base64')});
+   snapshot.photos.push({bucket:object.bucket_id,name:object.name,contentType:download.data.type,sha256:sha256(data),size:data.length,data:data.toString('base64')});
   }
   const encrypted=encryptBackup(snapshot),hash=sha256(encrypted),pathname=PREFIX+new Date().toISOString().replaceAll(':','-')+'-'+randomUUID()+'.bmbk';
   await put(pathname,encrypted,{access:'private',contentType:'application/octet-stream',addRandomSuffix:false});
