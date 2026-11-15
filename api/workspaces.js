@@ -1,3 +1,5 @@
+import {changeSubscription} from './_lib/subscriptions.js';
+import {syncWorkspaceBilling} from './_lib/billingEvents.js';
 import {activateWorkspaceBilling,payerInput,invoiceForSubscription} from './_lib/billing.js';
 import {asaasFetch,asaasEnvironment} from './_lib/asaas.js';
 import { withMonitoring } from './_lib/monitoring.js';
@@ -22,11 +24,14 @@ export function createWorkspaceHandler(context = getManagementContext, provider 
         counts.forEach(unwrap);
         let billing=null,payer=null;
         if(selected) {
-          const row=unwrap(await admin.from('barbearia_cobrancas').select('state,plan,amount_cents,first_due_date,subscription_id,subscription_attempted,invoice_url').eq('barbearia_id',selected.id).maybeSingle());
+          const row=unwrap(await admin.from('barbearia_cobrancas').select('state,plan,amount_cents,first_due_date,subscription_id,subscription_attempted,invoice_url,subscription_status').eq('barbearia_id',selected.id).maybeSingle());
           billing=row;
           if(actor.role==='super_admin') payer=unwrap(await admin.from('usuarios').select('id,nome,email,cpf_cnpj,telefone').eq('id',selected.owner_id).maybeSingle());
         }
-        return res.status(200).json({ workspaces, selected, members, billing, payer, billingEnvironment:asaasEnvironment(), stats: { clientes: counts[0]?.count || 0, atendimentos: counts[1]?.count || 0, agendamentos: counts[2]?.count || 0 } });
+        const finance=selected?unwrap(await admin.rpc('billing_overview',{p_workspace:selected.id})):null;
+        const pendingOperation=selected&&actor.role==='super_admin'?unwrap(await admin.from('billing_operations').select('id,action,target_plan,target_seats,state').eq('barbearia_id',selected.id).in('state',['running','uncertain']).maybeSingle()):null;
+        const services=actor.role==='super_admin'?unwrap(await admin.from('service_status').select('key,success,checked_at,details')):[];
+        return res.status(200).json({ finance,pendingOperation,services,workspaces, selected, members, billing, payer, billingEnvironment:asaasEnvironment(), stats: { clientes: counts[0]?.count || 0, atendimentos: counts[1]?.count || 0, agendamentos: counts[2]?.count || 0 } });
       }
       const body = req.body || {};
       if (body.action === 'create_workspace') {
@@ -60,6 +65,13 @@ export function createWorkspaceHandler(context = getManagementContext, provider 
       }
       if (body.action === 'activate_billing') {
         return res.status(200).json(await activateWorkspaceBilling({admin,actor,workspace,body,provider}));
+      }
+      if(['cancel_subscription','change_subscription'].includes(body.action))return res.status(200).json(await changeSubscription({admin,actor,workspace,body,provider}));
+      if(body.action==='sync_billing') {
+        requireSuperAdmin(actor);
+        const billing=unwrap(await admin.from('barbearia_cobrancas').select('*').eq('barbearia_id',workspace.id).maybeSingle());
+        if(!billing?.subscription_id)throw new AccessError('Assinatura não vinculada.',409);
+        return res.status(200).json(await syncWorkspaceBilling(admin,billing,provider));
       }
       if (body.action === 'refresh_billing_link') {
         requireSuperAdmin(actor);

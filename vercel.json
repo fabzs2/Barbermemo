@@ -22,5 +22,20 @@
       "src": "/.*",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "crons": [
+    {
+      "path": "/api/operations",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "functions": {
+    "api/operations.js": {
+      "maxDuration": 300,
+      "includeFiles": [
+        "scripts/certs/supabase-root.crt",
+        "node_modules/@electric-sql/pglite/dist/**"
+      ]
+    }
+  }
 }

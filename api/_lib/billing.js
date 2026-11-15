@@ -34,6 +34,12 @@ export async function activateWorkspaceBilling({admin,actor,workspace,body,provi
   const input=payerInput({cpfCnpj:body.cpfCnpj||payer.cpf_cnpj,telefone:body.telefone??payer.telefone},true);
   const due=String(body.firstDueDate||'');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(due)||!Number.isFinite(Date.parse(due+'T12:00:00Z'))||new Date(due+'T12:00:00Z').toISOString().slice(0,10)!==due)throw new AccessError('Informe o primeiro vencimento.');
+  if(body.restartCanceled===true) {
+    const old=unwrap(await admin.from('barbearia_cobrancas').select('subscription_id,subscription_status').eq('barbearia_id',workspace.id).maybeSingle());
+    if(old?.subscription_status!=='DELETED'||!/^sub_[A-Za-z0-9]+$/.test(old.subscription_id||''))throw new AccessError('Confirme o cancelamento anterior antes de criar outra assinatura.',409);
+    try{const previous=await provider(`/subscriptions/${old.subscription_id}`);if(!previous.deleted)throw new AccessError('A assinatura anterior ainda existe no Asaas.',409);}catch(error){if(error.status!==404)throw error;}
+    unwrap(await admin.rpc('reset_canceled_billing',{p_actor:actor.id,p_workspace:workspace.id,p_due:due}));
+  }
   const claim=unwrap(await admin.rpc('begin_workspace_billing',{p_actor:actor.id,p_workspace:workspace.id,p_plan:workspace.plano,p_amount:cents,p_due:due}));
   if(!claim.acquired)throw new AccessError('Uma ativação está em andamento. Aguarde e confira novamente.',409);
   let billing=claim.billing;

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { verifyBillingSchema } from '../scripts/verify-billing-schema.mjs';
 import { verifyTenancy } from '../scripts/verify-tenancy.mjs';
+import { verifySubscriptionSchema } from '../scripts/verify-subscription-schema.mjs';
 import { homeFor, mapUser } from '../src/domain/access.js';
 
 test('routes and profile mapping support all three roles and legacy service JSON', () => {
@@ -24,8 +25,10 @@ test('real tenant migration preserves legacy data and enforces RLS, seat limits 
     await db.exec('begin');
     await db.exec(await readFile(new URL('../supabase/migrations/20261115_workspaces.sql',import.meta.url),'utf8'));
     await db.exec(await readFile(new URL('../supabase/migrations/20261115194802_workspace_billing.sql',import.meta.url),'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261115202455_billing_events_and_subscription_management.sql',import.meta.url),'utf8'));
     await verifyTenancy(client);
     await verifyBillingSchema(client);
+    await verifySubscriptionSchema(client);
     const original = await db.query("select u.role,b.status,c.nome from public.usuarios u left join public.barbearias b on b.id=u.barbearia_id left join public.clientes c on c.barber_id=u.id order by u.email");
     assert.equal(original.rows.length,2);
     assert.equal(original.rows[0].role,'super_admin');

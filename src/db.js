@@ -98,6 +98,13 @@ const operations = {
     if(!res.ok)throw new Error(data.error||'Não foi possível concluir a operação.');
     return data;
   },
+  maintenanceRequest: async (action) => {
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session)throw new Error('Sessão expirada. Entre novamente.');
+    const res=await fetch('/api/operations',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action})});
+    const result=await res.json();if(!res.ok)throw new Error(result.error||'Não foi possível concluir a operação.');return result;
+  },
+
   getClientes: async (barberId, query = '') => {
     const cleanQuery = query.toLowerCase().trim();
     let dbQuery = supabase

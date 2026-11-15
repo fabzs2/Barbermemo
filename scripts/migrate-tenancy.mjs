@@ -3,6 +3,7 @@ import { connectDatabase } from './database.mjs';
 import { verifyTenancy } from './verify-tenancy.mjs';
 
 import { verifyBillingSchema } from './verify-billing-schema.mjs';
+import { verifySubscriptionSchema } from './verify-subscription-schema.mjs';
 if (process.env.VERCEL_ENV !== 'production') {
   console.log('Production tenant migration skipped outside the production build.');
 } else {
@@ -13,7 +14,7 @@ if (process.env.VERCEL_ENV !== 'production') {
     await client.query("select pg_advisory_xact_lock(hashtextextended('barbermemo-schema-migration',0))");
     const exists = (await client.query("select to_regclass('private.schema_migrations') is not null as ready")).rows[0].ready;
     let changed=false;
-    for(const migration of ['20261115_workspaces','20261115194802_workspace_billing']) {
+    for(const migration of ['20261115_workspaces','20261115194802_workspace_billing','20261115202455_billing_events_and_subscription_management']) {
       const applied=exists && (await client.query('select 1 from private.schema_migrations where version=$1',[migration])).rowCount>0;
       if(!applied) {
         await client.query(await readFile(new URL(`../supabase/migrations/${migration}.sql`,import.meta.url),'utf8'));
@@ -23,6 +24,7 @@ if (process.env.VERCEL_ENV !== 'production') {
     }
     await verifyTenancy(client);
     await verifyBillingSchema(client);
+    await verifySubscriptionSchema(client);
     if (process.env.TENANCY_MIGRATION_DRY_RUN === '1') {
       await client.query('rollback');
       console.log('Tenant migration validated and rolled back (dry run).');
