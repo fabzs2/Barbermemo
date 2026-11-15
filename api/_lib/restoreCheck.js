@@ -29,20 +29,36 @@ export async function verifyDatabaseRestore(snapshot) {
   return {tables:snapshot.tables.length,rows};
  }finally{await database.close();}
 }
+// These private buckets are reserved exclusively for this application's restore tests.
+export async function cleanupRestoreBuckets(admin) {
+ const listed=await admin.storage.listBuckets();if(listed.error)throw listed.error;
+ for(const bucket of listed.data.filter(b=>/^barbermemo-restore-[a-f0-9]{20}$/.test(b.id)&&b.public===false)) {
+  const objects=await admin.storage.from(bucket.id).list('',{limit:1});if(objects.error)throw objects.error;
+  // Never empty an unknown bucket; clean up only an already empty test bucket.
+  if(objects.data.length===0){const removed=await admin.storage.deleteBucket(bucket.id);if(removed.error)throw removed.error;}
+ }
+}
 export async function verifyPhotoRestore(snapshot,admin) {
- const bucket='barbermemo-restore-'+randomBytes(10).toString('hex');let created=false;
+ await cleanupRestoreBuckets(admin);
+ const bucket='barbermemo-restore-'+randomBytes(10).toString('hex');let created=false,failure=null,phase='create';const names=[];
  try {
   const result=await admin.storage.createBucket(bucket,{public:false});if(result.error)throw result.error;created=true;
   for(let i=0;i<snapshot.photos.length;i++) {
    const photo=snapshot.photos[i],body=Buffer.from(photo.data,'base64');
    if(sha256(body)!==photo.sha256)throw new Error('Photo hash mismatch in backup.');
-   const name='restored/'+i;
+   const name='restored/'+i;names.push(name);phase='upload';
    const upload=await admin.storage.from(bucket).upload(name,body,{contentType:photo.contentType||'application/octet-stream'});if(upload.error)throw upload.error;
-   const download=await admin.storage.from(bucket).download(name);if(download.error)throw download.error;
-   if(sha256(Buffer.from(await download.data.arrayBuffer()))!==photo.sha256)throw new Error('Restored photo differs from backup.');
+   phase='download';const download=await admin.storage.from(bucket).download(name);if(download.error)throw download.error;
+   phase='compare';if(sha256(Buffer.from(await download.data.arrayBuffer()))!==photo.sha256)throw new Error('Restored photo differs from backup.');
   }
-  return {photos:snapshot.photos.length};
- }finally{
-  if(created){const empty=await admin.storage.emptyBucket(bucket);if(empty.error)throw new Error('Temporary restore bucket cleanup failed.');const remove=await admin.storage.deleteBucket(bucket);if(remove.error)throw new Error('Temporary restore bucket cleanup failed.');}
+ }catch(error){failure=error;failure.code='photo_'+phase;}
+ if(created){
+  try {
+   // remove() is synchronous for these few known objects; emptyBucket() can queue a job.
+   if(names.length){phase='cleanup_objects';const removed=await admin.storage.from(bucket).remove(names);if(removed.error)throw removed.error;}
+   phase='cleanup_bucket';const removed=await admin.storage.deleteBucket(bucket);if(removed.error)throw removed.error;
+  }catch(error){if(!failure){failure=error;failure.code='photo_'+phase;}}
  }
+ if(failure)throw failure;
+ return {photos:snapshot.photos.length};
 }
