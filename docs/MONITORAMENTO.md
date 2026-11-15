@@ -6,7 +6,7 @@ O código está preparado. Alertas só ficam ativos após cadastrar as contas, v
 
 Crie uma conta em https://sentry.io/signup/ e um projeto React chamado `barbermemo`. Se o site oferecer um comando de instalação, não precisa executá-lo: o SDK já foi instalado. Copie o DSN do projeto para `SENTRY_DSN` no arquivo local `.env.monitoring.local`.
 
-Anote o identificador da organização em `SENTRY_ORG` e do projeto em `SENTRY_PROJECT` (os slugs da URL). Crie um token de build do Sentry para upload de source maps e preencha `SENTRY_AUTH_TOKEN`. O token é secreto: não pode ter prefixo VITE_. O upload dos mapas permite ver o arquivo e linha originais do erro.
+Anote o identificador da organização em `SENTRY_ORG` e do projeto em `SENTRY_PROJECT` (os slugs da URL). Crie um token de build do Sentry para upload de source maps e preencha `SENTRY_AUTH_TOKEN`. O token é secreto: não pode ter prefixo VITE_. O upload dos mapas permite ver o arquivo e linha originais do erro. O build usa o Sentry CLI depois que o Vite termina de gravar os arquivos; os mapas são removidos da pasta pública somente após upload bem-sucedido.
 
 ## 2. Telegram
 

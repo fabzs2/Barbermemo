@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
@@ -13,10 +12,6 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_APP_ENV': JSON.stringify(env.VERCEL_ENV || mode)
     },
     build: { sourcemap: upload ? 'hidden' : false },
-    plugins: [react(), tailwindcss(), ...(upload ? [sentryVitePlugin({
-      org: env.SENTRY_ORG, project: env.SENTRY_PROJECT, authToken: env.SENTRY_AUTH_TOKEN,
-      release: { name: release }, telemetry: false,
-      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] }
-    })] : [])]
+    plugins: [react(), tailwindcss()]
   };
 });
