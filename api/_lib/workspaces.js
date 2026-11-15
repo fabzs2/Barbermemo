@@ -36,6 +36,12 @@ export function unwrap(result) {
   if (result.error) {
     const { code, message = '' } = result.error;
     if (code === '42501') throw new AccessError('Acesso não autorizado.', 403);
+    if(code==='23514') {
+      if(message.includes('vencimento'))throw new AccessError('O primeiro vencimento deve ser entre hoje e os próximos 90 dias.',400);
+      if(message.includes('assinatura')||message.includes('operação existente'))throw new AccessError('Confira a assinatura existente no Asaas antes de alterar o plano ou o vencimento.',409);
+      if(message.includes('ativação em andamento'))throw new AccessError('Aguarde a ativação em andamento e confira novamente.',409);
+      if(message.includes('Plano ou valor'))throw new AccessError('O plano ou o valor mudou. Atualize a tela antes de confirmar.',409);
+    }
     if (code === '23514') throw new AccessError(message.includes('Limite') || message.includes('limite') ? 'Limite de acessos atingido. Desative um acesso ou ajuste o plano.' : 'Desative acessos antes de reduzir o plano.', 409);
     if (code === '23505') throw new AccessError('Este cadastro já existe.', 409);
     throw result.error;
@@ -73,6 +79,9 @@ export async function provisionAccount(admin, actor, workspace, input, role) {
       throw error;
     }
     userId = data.user.id;
+    if (input.cpfCnpj || input.telefone) {
+      unwrap(await admin.from('usuarios').update({cpf_cnpj:input.cpfCnpj||null,telefone:input.telefone||null}).eq('id',userId));
+    }
     unwrap(await admin.rpc('finish_workspace_account', { p_actor: actor.id, p_reservation: reservation, p_user: userId, p_name: input.nome, p_email: input.email }));
     finished = true;
     return { id: userId, nome: input.nome, email: input.email, role };

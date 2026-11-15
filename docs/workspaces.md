@@ -4,7 +4,15 @@
 - `/barbearia`: dono. Cria barbeiros na própria barbearia, pausa/reativa membros e acompanha totais. O botão Meu atendimento abre sua agenda e seus clientes.
 - `/dashboard`: profissional. Acessa seus próprios clientes, fichas, agenda e configurações.
 
-O cadastro começa como **Piloto**, sem integrar nem cobrar pelo Asaas. Ativo e Pausado são estados de acesso ao aplicativo; não criam, cancelam nem modificam assinaturas no Asaas. Cobrança continua manual/separada. Equipe nunca é cobrada individualmente por esta API. Endpoints Asaas exigem super admin e aceitam somente o titular de uma barbearia com status Ativo.
+O cadastro começa como **Piloto**, sem criar cliente nem assinatura no Asaas. O formulário do titular oferece CPF/CNPJ e telefone; o documento é opcional no piloto e obrigatório para a ativação paga. Membros da equipe não informam documento de cobrança e não têm assinatura própria.
+
+**Ativar e gerar assinatura** exige confirmação do super admin e primeiro vencimento. Os preços aprovados são R$ 59,90/mês no Individual e R$ 189,99/mês no Barbearia. O servidor fixa esses valores; o navegador não pode alterá-los. A assinatura usa `PIX` com ciclo `MONTHLY`: o Asaas gera as cobranças e o cliente paga cada Pix. Não se trata de autorização de débito por Pix Automático.
+
+O acesso só muda para **Ativo** depois que a assinatura é confirmada no Asaas e seu vínculo é salvo no banco. Ativo não significa pagamento recebido. O link da cobrança pode ser aberto no painel; se o Asaas ainda estiver gerando a cobrança, use Atualizar link da cobrança. O pagamento e a inadimplência são acompanhados no Asaas; esta versão não suspende o acesso automaticamente por atraso.
+
+**Pausar** bloqueia o acesso ao aplicativo e preserva os dados, mas não cancela a assinatura ou cobranças já emitidas. O cancelamento é realizado no Asaas. Uma conta com assinatura não pode voltar a Piloto sem cobrança pelo seletor de status. Para reativar, o servidor consulta e reutiliza a assinatura vinculada; assinaturas removidas, inativas ou divergentes exigem revisão no Asaas. A troca de plano de uma conta com assinatura também exige tratamento da assinatura existente e não pode gerar uma segunda assinatura pelo formulário de plano.
+
+O registro `barbearia_cobrancas` é protegido por RLS e escrito apenas pelo servidor. A API retorna os dados do titular apenas ao super admin. Uma reserva por barbearia impede ativações concorrentes. As tentativas e os IDs do Asaas são persistidos antes e após cada POST. Uma resposta incerta não é tratada como ausência de cobrança: Conferir ativação busca o recurso pela referência estável e só o reutiliza. Se o Asaas ainda não o mostrar, uma nova criação permanece bloqueada para evitar duplicidade. Uma rejeição de validação confirmada permite corrigir os dados e tentar de novo.
 
 O limite inclui o titular. Individual tem um acesso. Barbearia começa com cinco acessos, ajustáveis pelo super admin entre um e cem. Para reduzir, pause membros antes. Pausar preserva os dados e bloqueia consultas e alterações mesmo com JWT existente. Contas do titular são pausadas através do status da barbearia.
 
@@ -13,6 +21,8 @@ Na criação, defina uma senha de pelo menos dez caracteres e repasse as credenc
 ## Implantação e verificação
 
 `npm test` executa testes da API e a migração real sobre Postgres embarcado (PGlite), incluindo isolamento entre profissionais/barbearias, bloqueio de elevação de privilégios e escrita cruzada, lotação/reservas, agendamento público e proteção de fotos. `npm run build` testa, compila, envia source maps e só então aplica a migração no build de produção.
+
+O build consulta o Asaas para validar a credencial e informar se é produção ou sandbox; não emite cobranças. Em sandbox, o painel avisa que a assinatura é de teste.
 
 O build usa `POSTGRES_URL_NON_POOLING` ou `POSTGRES_URL`, com TLS e CA oficial Supabase. Migração e verificações contra o banco real rodam em uma transação com trava de migração. Fixtures usam savepoint e são desfeitas. Uma falha desfaz tudo e impede publicar. O registro em `private.schema_migrations` impede reaplicar a versão. Para validar sem persistir, defina `TENANCY_MIGRATION_DRY_RUN=1`; essa opção é somente para diagnóstico e não deve ser usada para publicar a interface nova sobre um banco antigo.
 

@@ -1,9 +1,21 @@
+export function asaasEnvironment() {
+  const key=process.env.ASAAS_API_KEY || process.env.VITE_ASAAS_API_KEY;
+  if(!key)return 'unconfigured';
+  try {
+    const host=new URL(process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3').hostname;
+    if(['api.asaas.com','www.asaas.com'].includes(host))return 'production';
+    if(['api-sandbox.asaas.com','sandbox.asaas.com'].includes(host))return 'sandbox';
+  }catch{}
+  return 'unconfigured';
+}
+
 export async function asaasFetch(path, options = {}) {
   const apiUrl = process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
   const apiKey = (process.env.ASAAS_API_KEY || process.env.VITE_ASAAS_API_KEY || '').trim();
 
   const res = await fetch(`${apiUrl}${path}`, {
     ...options,
+    signal: options.signal || AbortSignal.timeout(15000),
     headers: {
       'Content-Type': 'application/json',
       // Asaas rejects requests without a User-Agent (returns invalid_access_token

@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { Scissors, LogOut, Plus, Users, Store, ArrowRight, Search, X, RefreshCw, Eye, EyeOff, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../db';
+import { PLAN_PRICES,formatMoney,brazilDate,validDocument } from '../domain/billing.js';
 import { isSuperAdmin } from '../domain/access.js';
 import './management.css';
 
-const STATUS = { pilot: 'Piloto · sem cobrança', active: 'Ativo', suspended: 'Pausado' };
+const STATUS = { pilot: 'Piloto', active: 'Ativo', suspended: 'Pausado' };
 const ROLE = { dono: 'Dono da barbearia', barbeiro: 'Barbeiro', super_admin: 'Super admin' };
-const EMPTY_FORM = { nome: '', email: '', password: '', workspaceName: '', plano: 'barbearia', limiteBarbeiros: 5 };
+const EMPTY_FORM = { nome: '', email: '', password: '', workspaceName: '', plano: 'barbearia', limiteBarbeiros: 5, cpfCnpj:'', telefone:'' };
 
 function AccountDialog({ mode, workspace, onClose, onSave }) {
   const dialog = useRef(null);
@@ -42,9 +43,47 @@ function AccountDialog({ mode, workspace, onClose, onSave }) {
         <label>E-mail de acesso<input type="email" required maxLength={254} autoComplete="off" value={form.email} onChange={e => field('email', e.target.value)} disabled={busy}/></label>
         <label>Senha inicial<div className="management-password"><input type={showPassword ? 'text' : 'password'} required minLength={10} maxLength={72} autoComplete="new-password" value={form.password} onChange={e => field('password', e.target.value)} disabled={busy}/><button type="button" aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></label>
         <p className="management-hint">Use pelo menos 10 caracteres. Repasse o e-mail e a senha ao profissional por um canal privado. Ele poderá trocar a senha em Configurações.</p>
-        {mode === 'workspace' && <p className="management-pilot">O acesso começa como piloto, sem criar cliente, boleto ou assinatura no Asaas. A ativação e a cobrança são decisões separadas.</p>}
+        {mode === 'workspace' && <>
+          <div className="management-form-row"><label>CPF/CNPJ do titular<input inputMode="numeric" maxLength={18} autoComplete="off" value={form.cpfCnpj} onChange={e=>field('cpfCnpj',e.target.value)} disabled={busy}/></label><label>Telefone com DDD<input type="tel" maxLength={16} value={form.telefone} onChange={e=>field('telefone',e.target.value)} disabled={busy}/></label></div>
+          <p className="management-hint">CPF/CNPJ é opcional durante o piloto e obrigatório para ativar a assinatura paga. Não é necessário informar o documento dos membros da equipe.</p>
+          <p className="management-pilot">O cadastro começa como piloto, sem cobrança. Ao ativar, você confirma a assinatura mensal por Pix: {formatMoney(PLAN_PRICES[form.plano])}.</p>
+        </>}
       </>}
       <div className="management-dialog-actions"><button type="button" className="management-secondary" onClick={onClose} disabled={busy}>Cancelar</button><button className="management-primary" disabled={busy}>{busy ? 'Salvando…' : mode === 'plan' ? 'Salvar alterações' : 'Criar acesso'}</button></div>
+    </form>
+  </dialog>;
+}
+
+function BillingDialog({workspace,billing,payer,environment,onClose,onConfirm}) {
+  const dialog=useRef(null);
+  const [form,setForm]=useState({cpfCnpj:payer?.cpf_cnpj||'',telefone:payer?.telefone||'',firstDueDate:billing?.first_due_date||brazilDate(),confirmed:false});
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  const existing=!!billing?.subscription_id;
+  const reconciling=['creating','uncertain'].includes(billing?.state);
+  useEffect(()=>{dialog.current.showModal();},[]);
+  const field=(key,value)=>setForm(previous=>({...previous,[key]:value}));
+  async function submit(event) {
+    event.preventDefault();setError('');
+    if(!validDocument(form.cpfCnpj)){setError('Informe um CPF ou CNPJ válido do titular.');return;}
+    if(!form.confirmed)return;
+    setBusy(true);
+    try{await onConfirm({...form,confirmBilling:true,expectedPlan:workspace.plano,expectedAmountCents:PLAN_PRICES[workspace.plano]});onClose();}
+    catch(err){setError(err.message);}
+    finally{setBusy(false);}
+  }
+  return <dialog className="management-dialog" ref={dialog} aria-labelledby="billing-title" onCancel={e=>{e.preventDefault();if(!busy)onClose();}}>
+    <div className="management-dialog-heading"><div><p className="eyebrow">{workspace.nome}</p><h2 id="billing-title">{reconciling?'Conferir ativação':existing?'Reativar acesso':'Ativar assinatura'}</h2></div><button type="button" aria-label="Fechar" disabled={busy} onClick={onClose}><X size={20}/></button></div>
+    <form onSubmit={submit} className="management-form">
+      {error&&<p className="management-error" role="alert">{error}</p>}
+      <p className="management-pilot"><strong>{formatMoney(PLAN_PRICES[workspace.plano])} por mês · Pix</strong><br/>{existing?'A assinatura vinculada será conferida antes de liberar o acesso.':'O Asaas criará a assinatura e gerará as cobranças mensais. O cliente paga cada Pix; esta opção não autoriza débito automático.'}</p>
+      {environment!=='production' && <p className="management-error" role="status">{environment==='sandbox'?'Asaas em ambiente de testes. Esta assinatura não gera um Pix de produção.':'Asaas ainda não configurado para cobrança.'}</p>}
+      <p className="management-hint">Titular: {payer?.nome} · {payer?.email}</p>
+      <label>CPF/CNPJ do titular<input required inputMode="numeric" autoComplete="off" maxLength={18} value={form.cpfCnpj} onChange={e=>field('cpfCnpj',e.target.value)} disabled={busy}/></label>
+      <label>Telefone com DDD<input type="tel" maxLength={16} value={form.telefone} onChange={e=>field('telefone',e.target.value)} disabled={busy}/></label>
+      <label>Primeiro vencimento<input required type="date" min={existing||reconciling?undefined:brazilDate()} value={form.firstDueDate} readOnly={existing||reconciling} onChange={e=>field('firstDueDate',e.target.value)} disabled={busy}/></label>
+      <label className="billing-confirm"><input type="checkbox" required checked={form.confirmed} onChange={e=>field('confirmed',e.target.checked)} disabled={busy}/><span>{existing?'Confirmo reativar o acesso usando a assinatura existente.':`Confirmo a assinatura mensal de ${formatMoney(PLAN_PRICES[workspace.plano])} por Pix para este titular.`}</span></label>
+      <div className="management-dialog-actions"><button type="button" className="management-secondary" onClick={onClose} disabled={busy}>Cancelar</button><button className="management-primary" disabled={busy||!form.confirmed||environment==='unconfigured'}>{busy?'Conferindo no Asaas…':reconciling?'Conferir ativação':existing?'Reativar acesso':'Ativar e gerar assinatura'}</button></div>
     </form>
   </dialog>;
 }
@@ -88,6 +127,19 @@ export default function ManagementDashboard() {
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
+  async function activate(values) {
+    const result=await db.workspaceRequest('activate_billing',{workspaceId:selected.id,...values});
+    setNotice(`Assinatura mensal de ${formatMoney(result.amountCents)} confirmada no Asaas. Acesso ativado.`);
+    await load(workspaceId);
+  }
+  async function refreshInvoice() {
+    setBusy(true);setError('');
+    try {
+      const result=await db.workspaceRequest('refresh_billing_link',{workspaceId:selected.id});
+      if(!result.invoiceUrl)setNotice('O Asaas ainda está preparando a primeira cobrança. Confira novamente em instantes.');
+      await load(workspaceId);
+    }catch(err){setError(err.message);}finally{setBusy(false);}
+  }
   return <div className="management-page">
     <header className="management-header"><Link to={superAdmin ? '/admin' : '/barbearia'} className="management-brand"><Scissors size={25} strokeWidth={1.4}/><span>barbermemo<small>{superAdmin ? 'Administração' : 'Minha barbearia'}</small></span></Link><div className="management-account"><span>{currentUser.nome}</span>{!superAdmin && <Link to="/dashboard">Meu atendimento <ArrowRight size={16}/></Link>}<button type="button" aria-label="Sair" onClick={logout}><LogOut size={17}/><span>Sair</span></button></div></header>
     <main className="management-main">
@@ -102,9 +154,15 @@ export default function ManagementDashboard() {
             <div className="management-stats">{[['Clientes', data.stats.clientes], ['Atendimentos', data.stats.atendimentos], ['Agendamentos', data.stats.agendamentos]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
             {superAdmin && <div className="management-access-status"><span>Acesso à plataforma</span><select aria-label="Status da barbearia" value={selected.status} disabled={busy} onChange={e => {
               const status = e.target.value;
+              if(status==='active'){setDialog('billing');return;}
               if (status === 'suspended' && !window.confirm(`Pausar o acesso de todos os profissionais de ${selected.nome}? Os dados serão preservados.`)) return;
               change('set_workspace_status', { status }, 'Status de acesso atualizado.');
-            }}><option value="pilot">Piloto · sem cobrança</option><option value="active">Ativo</option><option value="suspended">Pausado</option></select><p>Alterar este status libera ou pausa o sistema. A cobrança no Asaas continua sendo gerenciada separadamente.</p></div>}
+            }}>{!data.billing?.subscription_id && !data.billing?.subscription_attempted && <option value="pilot">Piloto · sem cobrança</option>}<option value="active">Ativo</option><option value="suspended">Pausado</option></select><p>Ativar exige confirmar a assinatura mensal. Pausar o acesso não cancela a assinatura; gerencie o cancelamento no Asaas.</p></div>}
+            {superAdmin && <div className="management-billing">
+              <div><h3>Assinatura · {formatMoney(PLAN_PRICES[selected.plano])}/mês</h3><p>{data.billing?.state==='ready'?'Assinatura vinculada no Asaas · Pix mensal':data.billing?.state==='uncertain'?'Ativação pendente de conferência':data.billing?.state==='creating'?'Ativação em andamento':'Sem assinatura confirmada'}</p></div>
+              {data.billing?.state!=='ready' && <button type="button" className="management-primary" disabled={busy} onClick={()=>setDialog('billing')}>{['uncertain','creating'].includes(data.billing?.state)?'Conferir ativação':'Ativar e gerar assinatura'}</button>}
+              {data.billing?.subscription_id && <div className="management-billing-actions">{data.billing.invoice_url && <a className="management-secondary" href={data.billing.invoice_url} target="_blank" rel="noreferrer">Abrir cobrança Pix <ArrowRight size={15}/></a>}<button type="button" className="management-secondary" onClick={refreshInvoice} disabled={busy}>Atualizar link da cobrança</button></div>}
+            </div>}
             <div className="management-team-heading"><h3><Users size={18}/> {selected.plano === 'individual' ? 'Profissional' : 'Equipe'}</h3>{selected.plano === 'barbearia' && <button type="button" className="management-primary" disabled={busy || !canAdd} onClick={() => setDialog('barber')}><Plus size={17}/> Adicionar barbeiro</button>}</div>
             {selected.plano === 'barbearia' && !canAdd && <p className="management-hint">{selected.status === 'suspended' ? 'O acesso desta barbearia está pausado.' : 'Todos os acessos do plano estão em uso. Desative um profissional ou solicite um limite maior.'}</p>}
             <div className="management-members">{members.map(member => <article key={member.id}><span className="management-avatar">{member.nome.slice(0, 1).toUpperCase()}</span><div className="management-member-info"><strong>{member.nome}</strong><span>{member.email}</span><small>{member.id === selected.owner_id ? 'Titular · ' : ''}{ROLE[member.role]}</small></div><div className="management-member-actions"><span className={member.ativo ? 'member-active' : ''}>{member.ativo ? 'Ativo' : 'Pausado'}</span>{member.role === 'barbeiro' && member.id !== selected.owner_id && <button type="button" className="management-secondary" disabled={busy || selected.status === 'suspended'} onClick={() => change('set_member_active', { memberId: member.id, ativo: !member.ativo }, 'Acesso do profissional atualizado.')}>{member.ativo ? 'Pausar' : 'Reativar'}</button>}</div></article>)}</div>
@@ -113,6 +171,6 @@ export default function ManagementDashboard() {
         </section>
       </div>
     </main>
-    {dialog && <AccountDialog mode={dialog} workspace={selected} onClose={() => setDialog(null)} onSave={save}/>}
+    {dialog==='billing' ? <BillingDialog workspace={selected} billing={data.billing} payer={data.payer} environment={data.billingEnvironment} onClose={()=>setDialog(null)} onConfirm={activate}/> : dialog && <AccountDialog mode={dialog} workspace={selected} onClose={() => setDialog(null)} onSave={save}/>}
   </div>;
 }
