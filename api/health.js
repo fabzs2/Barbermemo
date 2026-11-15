@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   // Read-only, uses the public key and RLS; never returns customer rows.
   const checks = await Promise.allSettled([
     fetch(`${base.replace(/\/$/, '')}/auth/v1/settings`, { headers: { apikey: key }, signal: AbortSignal.timeout(4000) }),
-    fetch(`${base.replace(/\/$/, '')}/rest/v1/clientes?select=id&limit=0`, { headers: { apikey: key }, signal: AbortSignal.timeout(4000) })
+    fetch(`${base.replace(/\/$/, '')}/rest/v1/rpc/public_health`, { headers: { apikey: key }, signal: AbortSignal.timeout(4000) })
   ]);
   const auth = checks[0].status === 'fulfilled' && checks[0].value.ok;
   const database = checks[1].status === 'fulfilled' && checks[1].value.ok;

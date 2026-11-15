@@ -1,3 +1,4 @@
+import { homeFor } from '../domain/access.js';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -41,11 +42,7 @@ export default function LoginView() {
 
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate(homeFor(currentUser.role), {replace:true});
     }
   }, [currentUser, navigate]);
 

@@ -1,3 +1,4 @@
+import { isSuperAdmin } from '../domain/access.js';
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +19,7 @@ export default function BarberLayout() {
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
-    } else if (currentUser.role === 'admin') {
+    } else if (isSuperAdmin(currentUser)) {
       navigate('/admin');
     }
   }, [currentUser, navigate]);
@@ -177,6 +178,7 @@ export default function BarberLayout() {
   return (
     <div className="min-h-screen bg-barber-dark text-barber-text-primary flex items-center justify-center font-sans relative w-full">
 
+      {currentUser?.role === 'dono' && <Link className="owner-team-link" to="/barbearia"><Users size={16}/> Gerenciar equipe</Link>}
       {/* ======================================================== */}
       {/* 1. MOBILE LAYOUT (Visible only on screens < md / tablet) */}
       {/* ======================================================== */}

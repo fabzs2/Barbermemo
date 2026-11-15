@@ -1,5 +1,5 @@
 import { withMonitoring } from '../_lib/monitoring.js';
-import { getAuthedContext } from '../_lib/supabaseServer.js';
+import { getBillingContext, AccessError } from '../_lib/workspaces.js';
 import { getSubscriptionsByCustomer, updateSubscriptionNextDueDate } from '../_lib/asaas.js';
 
 const DEFAULT_TRIAL_DAYS = 7;
@@ -10,10 +10,11 @@ async function handler(req, res) {
     return;
   }
 
-  const ctx = await getAuthedContext(req);
-  if (ctx.error) {
-    res.status(401).json({ error: ctx.error });
-    return;
+  let ctx;
+  try { ctx = await getBillingContext(req); }
+  catch (error) {
+    if (error instanceof AccessError) return res.status(error.status).json({ error: error.message });
+    throw error;
   }
   const { supabase } = ctx;
 
@@ -25,12 +26,11 @@ async function handler(req, res) {
     return;
   }
 
-  // Relies on the same RLS that already scopes db.adminSyncBarbeiroAsaas.
   const { data: barbeiro, error: fetchError } = await supabase
     .from('usuarios')
     .select('id, nome, asaas_customer_id')
     .eq('id', barberId)
-    .eq('role', 'barbeiro')
+    .in('role', ['dono', 'barbeiro'])
     .maybeSingle();
 
   if (fetchError) {
@@ -41,6 +41,10 @@ async function handler(req, res) {
     res.status(404).json({ error: 'Barbeiro não encontrado ou sem permissão de acesso.' });
     return;
   }
+  const { data: workspace, error: workspaceError } = await supabase.from('barbearias').select('id').eq('owner_id', barberId).eq('status', 'active').maybeSingle();
+  if (workspaceError) throw workspaceError;
+  if (!workspace) return res.status(409).json({ error: 'Somente titulares de planos ativos podem ser sincronizados com o Asaas. Contas piloto e membros da equipe não são cobrados por aqui.' });
+
   if (!barbeiro.asaas_customer_id) {
     res.status(422).json({ error: 'Barbeiro ainda não está sincronizado com o Asaas.' });
     return;

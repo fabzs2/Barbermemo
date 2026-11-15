@@ -1,5 +1,5 @@
 import { withMonitoring } from '../_lib/monitoring.js';
-import { getAuthedContext } from '../_lib/supabaseServer.js';
+import { getBillingContext, AccessError } from '../_lib/workspaces.js';
 import { upsertAsaasCustomer } from '../_lib/asaas.js';
 
 async function handler(req, res) {
@@ -8,23 +8,22 @@ async function handler(req, res) {
     return;
   }
 
-  const ctx = await getAuthedContext(req);
-  if (ctx.error) {
-    res.status(401).json({ error: ctx.error });
-    return;
+  let ctx;
+  try { ctx = await getBillingContext(req); }
+  catch (error) {
+    if (error instanceof AccessError) return res.status(error.status).json({ error: error.message });
+    throw error;
   }
-  const { supabase, user } = ctx;
+  const { supabase } = ctx;
 
-  // Defaults to the caller's own account (self-service); an admin session
-  // (allowed by RLS the same way adminUpdateBarbeiro already is) can pass
-  // a different barberId to sync any barbeiro on their behalf.
-  const barberId = (req.body && req.body.barberId) || user.id;
+  const barberId = req.body?.barberId;
+  if (!barberId) return res.status(400).json({ error: 'Informe o titular.' });
 
   const { data: barbeiro, error: fetchError } = await supabase
     .from('usuarios')
     .select('*')
     .eq('id', barberId)
-    .eq('role', 'barbeiro')
+    .in('role', ['dono', 'barbeiro'])
     .maybeSingle();
 
   if (fetchError) {
@@ -35,6 +34,10 @@ async function handler(req, res) {
     res.status(404).json({ error: 'Barbeiro não encontrado ou sem permissão de acesso.' });
     return;
   }
+
+  const { data: workspace, error: workspaceError } = await supabase.from('barbearias').select('id').eq('owner_id', barberId).eq('status', 'active').maybeSingle();
+  if (workspaceError) throw workspaceError;
+  if (!workspace) return res.status(409).json({ error: 'Somente titulares de planos ativos podem ser sincronizados com o Asaas. Contas piloto e membros da equipe não são cobrados por aqui.' });
 
   try {
     const asaasCustomer = await upsertAsaasCustomer({

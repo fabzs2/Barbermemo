@@ -109,16 +109,15 @@ export default function PublicBookingView() {
     };
   });
 
-  // Generate candidate time slots dynamically based on barber's selected start and end hours
-  const horaInicioInt = barberInfo?.hora_inicio ? parseInt(barberInfo.hora_inicio.split(':')[0], 10) : 8;
-  const horaFimInt = barberInfo?.hora_fim ? parseInt(barberInfo.hora_fim.split(':')[0], 10) : 20;
-
+  // Services must fit completely within the published working hours.
+  const startParts = (barberInfo?.hora_inicio || '08:00').split(':').map(Number);
+  const endParts = (barberInfo?.hora_fim || '20:00').split(':').map(Number);
+  const startMinutes = startParts[0] * 60 + startParts[1];
+  const endMinutes = endParts[0] * 60 + endParts[1];
+  const serviceMinutes = getServiceDuration(selectedService, barberInfo?.servicos_config || SERVICES);
   const timeSlots = [];
-  for (let h = horaInicioInt; h <= horaFimInt; h++) {
-    timeSlots.push(`${String(h).padStart(2, '0')}:00`);
-    if (h < horaFimInt) {
-      timeSlots.push(`${String(h).padStart(2, '0')}:30`);
-    }
+  for (let minute = startMinutes; minute + serviceMinutes <= endMinutes; minute += 30) {
+    timeSlots.push(`${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`);
   }
 
   // Check if slot overlaps with any existing appointment
@@ -208,12 +207,12 @@ export default function PublicBookingView() {
 
     async function loadQueues() {
       try {
-        const barbers = await db.getBarbersInShop(barberInfo.barbearia_name);
+        const barbers = await db.getBarbersInShop(barberId);
         setShopBarbers(barbers);
         
         const queues = {};
         for (const b of barbers) {
-          const q = await db.getQueueForBarber(b.id);
+          const q = await db.getPublicQueue(b.id);
           queues[b.id] = q;
         }
         setBarbersQueues(queues);
@@ -224,15 +223,15 @@ export default function PublicBookingView() {
     loadQueues();
     const interval = setInterval(loadQueues, 20000); // refresh queues every 20 seconds
     return () => clearInterval(interval);
-  }, [barberInfo]);
+  }, [barberInfo, barberId]);
 
   // Poll customer's active appointment to track queue position
   useEffect(() => {
-    if (!successData?.id) return;
+    if (!successData?.trackingToken) return;
     
     async function track() {
       try {
-        const res = await db.getAgendamentoPublic(successData.id);
+        const res = await db.getAgendamentoPublic(successData.trackingToken);
         if (res) {
           setTrackingAppointment(res);
         }

@@ -1,4 +1,5 @@
 import React from 'react';
+import {isSuperAdmin, homeFor} from './domain/access.js';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -47,7 +48,7 @@ function AppRoutes() {
       <Route
         path="/admin"
         element={
-          currentUser?.role === 'admin' ? (
+          isSuperAdmin(currentUser) ? (
             <AdminDashboard />
           ) : (
             <Navigate to="/login" replace />
@@ -55,11 +56,13 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/barbearia" element={currentUser?.role === 'dono' ? <AdminDashboard/> : <Navigate to={homeFor(currentUser?.role)} replace/>}/>
+
       {/* Barber Client Workspace (Nested under BarberLayout wrapper) */}
       <Route
         path="/"
         element={
-          currentUser && currentUser.role !== 'admin' ? (
+          currentUser && !isSuperAdmin(currentUser) ? (
             <BarberLayout />
           ) : (
             <Navigate to="/login" replace />

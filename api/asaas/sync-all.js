@@ -1,5 +1,5 @@
 import { withMonitoring } from '../_lib/monitoring.js';
-import { getAuthedContext } from '../_lib/supabaseServer.js';
+import { getBillingContext, AccessError } from '../_lib/workspaces.js';
 import { upsertAsaasCustomer } from '../_lib/asaas.js';
 
 const DELAY_MS = 250; // spaces out calls to respect Asaas rate limits
@@ -14,20 +14,22 @@ async function handler(req, res) {
     return;
   }
 
-  const ctx = await getAuthedContext(req);
-  if (ctx.error) {
-    res.status(401).json({ error: ctx.error });
-    return;
+  let ctx;
+  try { ctx = await getBillingContext(req); }
+  catch (error) {
+    if (error instanceof AccessError) return res.status(error.status).json({ error: error.message });
+    throw error;
   }
   const { supabase } = ctx;
 
-  // Relies on the same RLS that already lets an admin session list every
-  // barbeiro via db.adminGetBarbeiros — a non-admin caller will just get
-  // their own row back (or none), so this is safe to run as self-service too.
+  const { data: shops, error: shopError } = await supabase.from('barbearias').select('owner_id').eq('status', 'active');
+  if (shopError) throw shopError;
+  const ownerIds = (shops || []).map(w => w.owner_id).filter(Boolean);
+  if (!ownerIds.length) return res.status(200).json({ total: 0, criados: 0, atualizados: 0, falharam: [] });
   const { data: barbeiros, error: fetchError } = await supabase
     .from('usuarios')
     .select('*')
-    .eq('role', 'barbeiro');
+    .in('role', ['dono', 'barbeiro']).in('id', ownerIds).eq('ativo', true);
 
   if (fetchError) {
     res.status(500).json({ error: fetchError.message });

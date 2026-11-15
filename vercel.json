@@ -5,7 +5,7 @@
       "dest": "/landing/index.html"
     },
     {
-      "src": "/(?:login|redefinir-senha|dashboard|settings|admin|metrics|clientes|agendamentos|agendar|api)(?:/.*)?$",
+      "src": "/(?:login|redefinir-senha|dashboard|settings|admin|barbearia|metrics|clientes|agendamentos|agendar|api)(?:/.*)?$",
       "headers": {
         "X-Robots-Tag": "noindex, nofollow"
       },

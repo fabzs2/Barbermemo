@@ -1,3 +1,4 @@
+import { mapUser } from './domain/access.js';
 import { instrumentOperations } from './monitoring/index.js';
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,33 +18,18 @@ function base64ToBlob(base64, mimeType) {
   return new Blob([byteArray], { type: mimeType });
 }
 
-// Mappers to transform snake_case database schema to camelCase frontend schema
-const mapUser = (u) => {
-  if (!u) return null;
-  return {
-    id: u.id,
-    nome: u.nome,
-    email: u.email,
-    barbeariaName: u.barbearia_name,
-    role: u.role,
-    cpfCnpj: u.cpf_cnpj || '',
-    asaasCustomerId: u.asaas_customer_id || null,
-    telefone: u.telefone || '',
-    horaInicio: u.hora_inicio || '08:00',
-    horaFim: u.hora_fim || '20:00',
-    modeloAtendimento: u.modelo_atendimento || 'agenda',
-    statusFila: u.status_fila || 'disponivel',
-    servicosConfig: u.servicos_config || [
-      { name: 'Corte', duration: 40, price: 'R$ 40,00' },
-      { name: 'Barba', duration: 30, price: 'R$ 30,00' },
-      { name: 'Corte + Barba', duration: 60, price: 'R$ 60,00' },
-      { name: 'Sobrancelha', duration: 20, price: 'R$ 15,00' },
-      { name: 'Platinado / Luzes', duration: 90, price: 'R$ 120,00' },
-      { name: 'Selagem / Progressiva', duration: 120, price: 'R$ 150,00' }
-    ]
-  };
-};
+async function signPhotos(photos) {
+  return Promise.all(photos.map(async photo => {
+    const marker='/storage/v1/object/public/barbermemo-photos/';
+    const path=photo.includes(marker)?decodeURIComponent(photo.split(marker)[1].split('?')[0]):photo;
+    if(path.startsWith('http')||path.startsWith('data:'))return '';
+    const {data,error}=await supabase.storage.from('barbermemo-photos').createSignedUrl(path,3600);
+    if(error)throw error;
+    return data.signedUrl;
+  }));
+}
 
+// Mappers to transform snake_case database schema to camelCase frontend schema
 const mapClient = (c) => {
   if (!c) return null;
   return {
@@ -84,6 +70,11 @@ const mapAgendamento = (ag) => {
 };
 
 const operations = {
+  getProfile: async (id) => {
+    const {data,error}=await supabase.from('usuarios').select('*, barbearias(id,nome,plano,status,limite_barbeiros)').eq('id',id).maybeSingle();
+    if(error)throw error;
+    return mapUser(data);
+  },
   // Authentication APIs
   login: async (email, senha) => {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -93,248 +84,20 @@ const operations = {
 
     if (authError) throw authError;
 
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', authData.user.id)
-      .maybeSingle();
-
-    if (error) throw error;
-    return mapUser(data);
+    const profile=await operations.getProfile(authData.user.id);
+    if(!profile || !profile.ativo || profile.workspaceStatus==='suspended') { await supabase.auth.signOut(); throw new Error('Acesso pausado ou ainda não liberado. Entre em contato com o responsável.'); }
+    return profile;
   },
 
-  // Admin APIs
-  adminGetBarbeiros: async () => {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('role', 'barbeiro')
-      .order('nome', { ascending: true });
-
-    if (error) throw error;
-    return (data || []).map(mapUser);
-  },
-
-  adminAddBarbeiro: async (barber) => {
-    const cleanEmail = barber.email.toLowerCase().trim();
-
-    if (!barber.cpfCnpj || !barber.cpfCnpj.replace(/\D/g, '')) {
-      throw new Error("Informe o CPF do barbeiro.");
-    }
-
-    // Check if email already exists in public.usuarios
-    const { data: existing, error: checkError } = await supabase
-      .from('usuarios')
-      .select('id')
-      .eq('email', cleanEmail)
-      .maybeSingle();
-
-    if (checkError) throw checkError;
-    if (existing) {
-      throw new Error("Este e-mail já está cadastrado.");
-    }
-
-    // Create a temporary sessionless Supabase client to register the user
-    // without hijacking the current logged-in admin session
-    const tempSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      }
-    });
-
-    const { data: authData, error: authError } = await tempSupabase.auth.signUp({
-      email: cleanEmail,
-      password: barber.senha,
-      options: {
-        data: {
-          nome: barber.nome,
-          barbearia_name: barber.barbeariaName,
-          role: 'barbeiro'
-        }
-      }
-    });
-
-    if (authError) throw authError;
-    if (!authData.user) {
-      throw new Error("Não foi possível criar a conta de autenticação.");
-    }
-
-    // Wait a brief moment for the database trigger to create the public.usuarios profile,
-    // and query it to return the mapped user.
-    let profile = null;
-    for (let i = 0; i < 4; i++) {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', authData.user.id)
-        .maybeSingle();
-      
-      if (data) {
-        profile = data;
-        break;
-      }
-      await new Promise(resolve => setTimeout(resolve, 250));
-    }
-
-    if (!profile) {
-      // Fallback: If database trigger did not run, manually insert the profile
-      const { data: insertedData, error: insertError } = await supabase
-        .from('usuarios')
-        .insert({
-          id: authData.user.id,
-          nome: barber.nome,
-          email: cleanEmail,
-          barbearia_name: barber.barbeariaName,
-          role: 'barbeiro',
-          senha: barber.senha // Keep provisory password reference in database if needed
-        })
-        .select()
-        .single();
-        
-      if (insertError) {
-        console.error("Erro ao criar perfil manualmente:", insertError);
-        throw new Error("Perfil do barbeiro não pôde ser criado automaticamente. Verifique se o e-mail não está duplicado ou desative a confirmação de e-mail no Supabase.");
-      }
-      profile = insertedData;
-    }
-
-    // cpf_cnpj isn't part of the auth signUp metadata, so persist it as a
-    // follow-up update once the profile row (created by the DB trigger or
-    // the manual fallback above) definitely exists.
-    if (barber.cpfCnpj) {
-      const { data: withCpf, error: cpfError } = await supabase
-        .from('usuarios')
-        .update({ cpf_cnpj: barber.cpfCnpj.replace(/\D/g, '') })
-        .eq('id', profile.id)
-        .select()
-        .single();
-      if (!cpfError) profile = withCpf;
-    }
-
-    return mapUser(profile);
-  },
-
-  adminUpdateBarbeiro: async (id, fields) => {
-    const cleanEmail = fields.email.toLowerCase().trim();
-
-    if (!fields.cpfCnpj || !fields.cpfCnpj.replace(/\D/g, '')) {
-      throw new Error("Informe o CPF do barbeiro.");
-    }
-
-    // Check if email is in use by another user
-    const { data: existing, error: checkError } = await supabase
-      .from('usuarios')
-      .select('id')
-      .eq('email', cleanEmail)
-      .neq('id', id)
-      .maybeSingle();
-
-    if (checkError) throw checkError;
-    if (existing) {
-      throw new Error("Este e-mail já está em uso por outro usuário.");
-    }
-
-    const { data, error } = await supabase
-      .from('usuarios')
-      .update({
-        nome: fields.nome,
-        email: cleanEmail,
-        barbearia_name: fields.barbeariaName,
-        cpf_cnpj: fields.cpfCnpj !== undefined ? (fields.cpfCnpj ? fields.cpfCnpj.replace(/\D/g, '') : null) : undefined
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return mapUser(data);
-  },
-
-  adminSyncBarbeiroAsaas: async (barberId) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Sessão expirada. Faça login novamente.');
-
-    const res = await fetch('/api/asaas/sync-customer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ barberId })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao sincronizar barbeiro com o Asaas.');
-    return mapUser(data.barbeiro);
-  },
-
-  adminGrantTrial: async (barberId, trialDays = 7) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Sessão expirada. Faça login novamente.');
-
-    const res = await fetch('/api/asaas/grant-trial', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ barberId, trialDays })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao conceder trial ao barbeiro.');
+  workspaceRequest: async (action, values = {}, method = 'POST') => {
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session)throw new Error('Sessão expirada. Entre novamente.');
+    const url=method==='GET'?'/api/workspaces'+(values.workspaceId?'?workspaceId='+encodeURIComponent(values.workspaceId):''):'/api/workspaces';
+    const res=await fetch(url,{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},...(method==='GET'?{}:{body:JSON.stringify({action,...values})})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Não foi possível concluir a operação.');
     return data;
   },
-
-  adminSyncAllBarbeirosAsaas: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Sessão expirada. Faça login novamente.');
-
-    const res = await fetch('/api/asaas/sync-all', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`
-      }
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao sincronizar barbeiros com o Asaas.');
-    return data;
-  },
-
-  adminDeleteBarbeiro: async (id) => {
-    const { error } = await supabase
-      .from('usuarios')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    return true;
-  },
-
-  adminGetGlobalStats: async () => {
-    const [barbeirosRes, clientesRes, atendimentosRes, agendamentosRes] = await Promise.all([
-      supabase.from('usuarios').select('id', { count: 'exact', head: true }).eq('role', 'barbeiro'),
-      supabase.from('clientes').select('id', { count: 'exact', head: true }),
-      supabase.from('atendimentos').select('id', { count: 'exact', head: true }),
-      supabase.from('agendamentos').select('id', { count: 'exact', head: true })
-    ]);
-
-    if (barbeirosRes.error) throw barbeirosRes.error;
-    if (clientesRes.error) throw clientesRes.error;
-    if (atendimentosRes.error) throw atendimentosRes.error;
-    if (agendamentosRes.error) throw agendamentosRes.error;
-
-    return {
-      totalBarbeiros: barbeirosRes.count || 0,
-      totalClientes: clientesRes.count || 0,
-      totalAtendimentos: atendimentosRes.count || 0,
-      totalAgendamentos: agendamentosRes.count || 0
-    };
-  },
-
   getClientes: async (barberId, query = '') => {
     const cleanQuery = query.toLowerCase().trim();
     let dbQuery = supabase
@@ -385,7 +148,7 @@ const operations = {
 
     return {
       ...mapClient(cliente),
-      atendimentos: (atendimentos || []).map(mapAtendimento)
+      atendimentos: await Promise.all((atendimentos || []).map(async a => ({...mapAtendimento(a),fotos:await signPhotos(a.fotos||[])})))
     };
   },
 
@@ -462,13 +225,9 @@ const operations = {
             
             if (uploadError) throw uploadError;
             
-            const { data: { publicUrl } } = supabase.storage
-              .from('barbermemo-photos')
-              .getPublicUrl(fileName);
-              
-            uploadedUrls.push(publicUrl);
+            uploadedUrls.push(fileName);
           } catch (e) {
-            console.error("Erro ao fazer upload da imagem:", e);
+            throw new Error("Não foi possível salvar a foto. Tente novamente.", {cause:e});
           }
         } else {
           uploadedUrls.push(foto);
@@ -673,39 +432,20 @@ const operations = {
   },
 
   getBarberPublicInfo: async (barberId) => {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('nome, barbearia_name, hora_inicio, hora_fim, servicos_config, telefone, modelo_atendimento')
-      .eq('id', barberId)
-      .eq('role', 'barbeiro')
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
+    const {data,error}=await supabase.rpc('public_barber_profile',{p_barber:barberId});
+    if(error)throw error; return data;
   },
-
-  getAgendamentoPublic: async (id) => {
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .select('*, clientes(*)')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
+  getAgendamentoPublic: async (token) => {
+    const {data,error}=await supabase.rpc('public_booking_status',{p_token:token});
+    if(error)throw error; return data;
   },
-
-  getPublicAgendamentos: async (barberId, dateString) => {
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .select('data_hora, servicos, status')
-      .eq('barber_id', barberId)
-      .gte('data_hora', `${dateString}T00:00:00`)
-      .lte('data_hora', `${dateString}T23:59:59`)
-      .neq('status', 'Cancelado');
-
-    if (error) throw error;
-    return data || [];
+  getPublicAgendamentos: async (barberId,dateString) => {
+    const {data,error}=await supabase.rpc('public_booked_slots',{p_barber:barberId,p_date:dateString});
+    if(error)throw error; return (data||[]).map(mapAgendamento);
+  },
+  getPublicQueue: async (barberId) => {
+    const {data,error}=await supabase.rpc('public_barber_queue',{p_barber:barberId});
+    if(error)throw error; return (data||[]).map(mapAgendamento);
   },
 
   addPublicAgendamento: async (barberId, agendamento) => {
@@ -715,7 +455,7 @@ const operations = {
       p_barber_id: barberId,
       p_nome: agendamento.nome.trim(),
       p_telefone: cleanPhone,
-      p_data_hora: agendamento.dataHora,
+      p_data_hora: new Date(agendamento.dataHora).toISOString(),
       p_servicos: agendamento.servicos || 'Corte'
     });
 
@@ -723,6 +463,7 @@ const operations = {
     
     return {
       id: data.id,
+      trackingToken: data.tracking_token,
       clienteId: data.cliente_id,
       dataHora: data.data_hora,
       servicos: data.servicos,
@@ -732,7 +473,7 @@ const operations = {
   },
 
   updateBarberConfig: async (barberId, config) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('usuarios')
       .update({
         telefone: config.telefone,
@@ -747,19 +488,12 @@ const operations = {
       .single();
 
     if (error) throw error;
-    return mapUser(data);
+    return operations.getProfile(barberId);
   },
 
-  getBarbersInShop: async (barbeariaName) => {
-    if (!barbeariaName) return [];
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('id, nome, role, status_fila, hora_inicio, hora_fim, servicos_config, telefone, modelo_atendimento')
-      .eq('barbearia_name', barbeariaName)
-      .eq('role', 'barbeiro');
-
-    if (error) throw error;
-    return (data || []).map(mapUser);
+  getBarbersInShop: async (barberId) => {
+    const {data,error}=await supabase.rpc('public_shop_barbers',{p_barber:barberId});
+    if(error)throw error; return (data||[]).map(mapUser);
   },
 
   getQueueForBarber: async (barberId) => {
