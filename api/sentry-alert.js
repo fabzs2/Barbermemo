@@ -22,7 +22,9 @@ export default async function handler(req, res) {
   try { payload = JSON.parse(raw.toString('utf8')); } catch { return res.status(400).end(); }
   if (req.headers['sentry-hook-resource'] !== 'event_alert' || payload.action !== 'triggered') return res.status(204).end();
   // Keep the webhook fast; Vercel waits for this background task after the response.
-  waitUntil(deliverTelegram(alertText(payload)).catch(() => {
+  waitUntil(deliverTelegram(alertText(payload)).then(() => {
+    console.info('monitoring.telegram_delivery_succeeded');
+  }).catch(() => {
     console.error('monitoring.telegram_delivery_failed');
   }));
   return res.status(202).json({accepted:true});
