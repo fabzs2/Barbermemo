@@ -22,6 +22,8 @@ Na criação, defina uma senha de pelo menos dez caracteres e repasse as credenc
 
 `npm test` executa testes da API e a migração real sobre Postgres embarcado (PGlite), incluindo isolamento entre profissionais/barbearias, bloqueio de elevação de privilégios e escrita cruzada, lotação/reservas, agendamento público e proteção de fotos. `npm run build` testa, compila, envia source maps e só então aplica a migração no build de produção.
 
+O teste `verify-billing-flow.mjs` também exercita o cadastro com CPF/CNPJ, a ativação, a falha de resposta e a reconciliação sobre Auth/PostgREST/banco reais, com contas temporárias. Somente o transporte de escrita para o Asaas é simulado em memória, evitando qualquer cobrança real durante o teste.
+
 O build consulta o Asaas para validar a credencial e informar se é produção ou sandbox; não emite cobranças. Em sandbox, o painel avisa que a assinatura é de teste.
 
 O build usa `POSTGRES_URL_NON_POOLING` ou `POSTGRES_URL`, com TLS e CA oficial Supabase. Migração e verificações contra o banco real rodam em uma transação com trava de migração. Fixtures usam savepoint e são desfeitas. Uma falha desfaz tudo e impede publicar. O registro em `private.schema_migrations` impede reaplicar a versão. Para validar sem persistir, defina `TENANCY_MIGRATION_DRY_RUN=1`; essa opção é somente para diagnóstico e não deve ser usada para publicar a interface nova sobre um banco antigo.

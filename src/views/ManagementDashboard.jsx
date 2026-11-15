@@ -136,7 +136,7 @@ export default function ManagementDashboard() {
     setBusy(true);setError('');
     try {
       const result=await db.workspaceRequest('refresh_billing_link',{workspaceId:selected.id});
-      if(!result.invoiceUrl)setNotice('O Asaas ainda está preparando a primeira cobrança. Confira novamente em instantes.');
+      if(!result.invoiceUrl)setNotice('Não há cobrança Pix pendente disponível no momento. Confira a assinatura no Asaas.');
       await load(workspaceId);
     }catch(err){setError(err.message);}finally{setBusy(false);}
   }
