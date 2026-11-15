@@ -24,7 +24,13 @@ export default function BarberLayout() {
   }, [currentUser, navigate]);
 
   // Sync date and search queries globally in layout state
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; });
+  useEffect(() => {
+    if (location.pathname === '/dashboard') {
+      const now = new Date();
+      setSelectedDate(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`);
+    }
+  }, [location.pathname]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClientId, setSelectedClientId] = useState(null);
 
@@ -61,6 +67,8 @@ export default function BarberLayout() {
       setSidebarTab('agenda');
     } else if (path.startsWith('/metrics')) {
       setSidebarTab('metrics');
+    } else if (path.startsWith('/settings')) {
+      setSidebarTab('settings');
     } else {
       setSidebarTab('clientes');
     }
@@ -172,15 +180,15 @@ export default function BarberLayout() {
       {/* ======================================================== */}
       {/* 1. MOBILE LAYOUT (Visible only on screens < md / tablet) */}
       {/* ======================================================== */}
-      <div className="block md:hidden w-full max-w-md min-h-screen bg-barber-dark border-x border-barber-border flex flex-col relative shadow-2xl pb-20">
+      <div className="block md:hidden w-full min-h-screen bg-barber-dark border-x border-barber-border flex flex-col relative shadow-none pb-20">
 
         {/* Header */}
         <header className="px-5 py-4 border-b border-barber-border bg-barber-card/60 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center select-none">
           <div className="flex items-center gap-2" onClick={() => navigate('/dashboard')}>
-            <img src="/logo.svg" alt="Logo" className="w-8 h-8 object-contain rounded-lg shadow-md cursor-pointer" />
+            <span className="brand-scissors"><Scissors size={22} strokeWidth={1.4} /></span>
             <div>
               <h1 className="text-sm font-bold tracking-tight cursor-pointer">BarberMemo</h1>
-              <p className="text-[10px] text-barber-text-secondary flex items-center gap-1">
+              <p className="text-xs text-barber-text-secondary flex items-center gap-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${isDataLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
                 {isDataLoading ? 'Sincronizando...' : `Barbeiro: ${currentUser.nome}`}
               </p>
@@ -211,7 +219,7 @@ export default function BarberLayout() {
         </main>
 
         {/* Bottom tab style navigation (MOBILE) */}
-        <div className="fixed bottom-0 left-0 right-0 md:hidden bg-barber-card/85 backdrop-blur-md border-t border-barber-border py-3 px-4 flex justify-around items-center text-zinc-500 text-[10px] z-20 select-none">
+        <div className="fixed bottom-0 left-0 right-0 md:hidden bg-barber-card/85 backdrop-blur-md border-t border-barber-border py-3 px-4 flex justify-around items-center text-zinc-400 text-xs z-20 select-none">
           <button
             onClick={() => navigate('/dashboard')}
             className={`flex flex-col items-center gap-1 transition-colors ${location.pathname === '/dashboard' ? 'text-barber-accent font-bold' : 'hover:text-zinc-300'}`}
@@ -247,18 +255,18 @@ export default function BarberLayout() {
       {/* ======================================================== */}
       {/* 2. DESKTOP LAYOUT (Visible only on screens >= md / tablet) */}
       {/* ======================================================== */}
-      <div className="hidden md:flex w-full h-[90vh] max-w-5xl mx-4 bg-barber-card border border-barber-border rounded-2xl shadow-2xl overflow-hidden fade-in relative">
+      <div className="hidden md:flex w-full h-screen overflow-hidden relative">
 
         {/* DESKTOP SIDEBAR (320px width) */}
-        <aside className="w-80 border-r border-barber-border flex flex-col h-full bg-barber-card/50 shrink-0">
+        <aside className="workspace-sidebar w-72 border-r border-barber-border flex flex-col h-full bg-barber-card/50 shrink-0">
 
           {/* Brand header */}
           <div className="px-5 py-4 border-b border-barber-border flex justify-between items-center bg-barber-card select-none">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
-              <img src="/logo.svg" alt="Logo" className="w-7 h-7 object-contain rounded-lg shadow-sm" />
+              <span className="brand-scissors"><Scissors size={22} strokeWidth={1.4} /></span>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm font-bold tracking-tight truncate">{currentUser.barbeariaName || 'Minha Agenda'}</h1>
-                <p className="text-[9px] text-zinc-500 truncate flex items-center gap-1">
+                <p className="text-xs text-zinc-400 truncate flex items-center gap-1">
                   <span className={`w-1 h-1 rounded-full ${isDataLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
                   {isDataLoading ? 'Sincronizando...' : `Barbeiro: ${currentUser.nome}`}
                 </p>
@@ -268,14 +276,14 @@ export default function BarberLayout() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => navigate('/settings')}
-                className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 title="Configurações"
               >
                 <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={handleLogoutClick}
-                className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 title="Sair"
               >
                 <LogOut className="w-4 h-4" />
@@ -283,27 +291,14 @@ export default function BarberLayout() {
             </div>
           </div>
 
-          {/* Sidebar Navigation Selector */}
-          <div className="flex bg-zinc-950 p-1 rounded-lg mx-4 my-3 border border-barber-border/80 select-none">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${sidebarTab === 'clientes' ? 'bg-barber-accent text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-            >
-              Clientes
-            </button>
-            <button
-              onClick={() => navigate('/agendamentos')}
-              className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${sidebarTab === 'agenda' ? 'bg-barber-accent text-white' : 'text-zinc-550 hover:text-zinc-300'}`}
-            >
-              Agenda
-            </button>
-            <button
-              onClick={() => navigate('/metrics')}
-              className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${sidebarTab === 'metrics' ? 'bg-barber-accent text-white' : 'text-zinc-550 hover:text-zinc-300'}`}
-            >
-              Métricas
-            </button>
-          </div>
+          <nav className="workspace-navigation" aria-label="Navegação principal">
+            {[
+              { path: '/dashboard', label: 'Clientes', tab: 'clientes', Icon: Users },
+              { path: '/agendamentos', label: currentUser.modeloAtendimento === 'fila' ? 'Fila de atendimento' : 'Agenda', tab: 'agenda', Icon: CalendarDays },
+              { path: '/metrics', label: 'Resultados', tab: 'metrics', Icon: BarChart3 },
+              { path: '/settings', label: 'Configurações', tab: 'settings', Icon: Settings }
+            ].map(({path, label, tab, Icon}) => <button key={path} aria-current={sidebarTab === tab ? 'page' : undefined} onClick={() => navigate(path)}><Icon size={18} strokeWidth={1.5} /><span>{label}</span></button>)}
+          </nav>
 
           {/* Render TAB content: CLIENTS */}
           {sidebarTab === 'clientes' && (
@@ -311,15 +306,15 @@ export default function BarberLayout() {
               {/* Stats */}
               <div className="p-4 grid grid-cols-3 gap-2 border-b border-barber-border/30 bg-barber-card/20 select-none">
                 <div className="bg-zinc-800/30 rounded-lg p-2 text-center border border-barber-border/30">
-                  <span className="text-[9px] text-zinc-505 block font-sans">Clientes</span>
+                  <span className="text-xs text-zinc-400 block font-sans">Clientes</span>
                   <span className="text-xs font-bold text-zinc-200">{stats.totalClientes}</span>
                 </div>
                 <div className="bg-zinc-800/30 rounded-lg p-2 text-center border border-barber-border/30">
-                  <span className="text-[9px] text-zinc-505 block font-sans">Cortes</span>
+                  <span className="text-xs text-zinc-400 block font-sans">Cortes</span>
                   <span className="text-xs font-bold text-zinc-200">{stats.totalAtendimentos}</span>
                 </div>
                 <div className="bg-zinc-800/30 rounded-lg p-2 text-center border border-barber-border/30">
-                  <span className="text-[9px] text-zinc-505 block font-sans">Este Mês</span>
+                  <span className="text-xs text-zinc-400 block font-sans">Este Mês</span>
                   <span className="text-xs font-bold text-zinc-200">{stats.atendimentosMes}</span>
                 </div>
               </div>
@@ -327,14 +322,14 @@ export default function BarberLayout() {
               {/* Search Bar */}
               <div className="p-3 border-b border-barber-border/30">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 text-zinc-500 w-3.5 h-3.5" />
+                  <Search className="absolute left-2.5 top-2.5 text-zinc-400 w-3.5 h-3.5" />
                   <input
                     type="text" placeholder="Buscar cliente..."
                     className="w-full bg-barber-dark border border-barber-border rounded-lg py-2 pl-8 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-600"
                     value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-2.5 text-zinc-500 hover:text-white">
+                    <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-2.5 text-zinc-400 hover:text-white">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -347,7 +342,7 @@ export default function BarberLayout() {
                 {/* Sales alarm alerts */}
                 {!searchQuery && proximosRetornos.length > 0 && (
                   <div className="space-y-2">
-                    <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest px-1 block select-none font-sans">Alertas de Retorno</span>
+                    <span className="text-xs font-bold text-amber-500 uppercase tracking-widest px-1 block select-none font-sans">Alertas de Retorno</span>
                     <div className="space-y-1.5">
                       {proximosRetornos.map((item) => (
                         <div
@@ -362,7 +357,7 @@ export default function BarberLayout() {
                         >
                           <div className="flex justify-between items-start">
                             <span className="font-semibold text-zinc-200 truncate pr-1">{item.cliente.nome}</span>
-                            <span className="text-[8px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1 py-0.2 rounded uppercase shrink-0">
+                            <span className="text-xs font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1 py-0.2 rounded uppercase shrink-0">
                               {item.diasAtrasados > 0 ? `Atrasado ${item.diasAtrasados}d` : 'Hoje'}
                             </span>
                           </div>
@@ -372,7 +367,7 @@ export default function BarberLayout() {
                               e.stopPropagation();
                               handleWhatsAppReminder(item.cliente, item);
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-1 px-2 rounded-md text-[9px] font-bold flex items-center justify-center gap-1 transition-all"
+                            className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-1 px-2 rounded-md text-xs font-bold flex items-center justify-center gap-1 transition-all"
                           >
                             <Phone className="w-2.5 h-2.5 fill-white text-emerald-600" />
                             WhatsApp
@@ -385,7 +380,7 @@ export default function BarberLayout() {
 
                 {/* Main list */}
                 <div className="space-y-1.5">
-                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest px-1 block select-none">Clientes Cadastrados</span>
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1 block select-none">Clientes Cadastrados</span>
                   <div className="space-y-1">
                     {clientes.map((c) => {
                       const isActive = selectedClientId === c.id;
@@ -399,10 +394,10 @@ export default function BarberLayout() {
                             }`}
                         >
                           <span className={`font-semibold block truncate ${isActive ? 'text-white font-bold' : 'text-zinc-300'}`}>{c.nome}</span>
-                          <div className="flex justify-between items-center text-[10px] text-zinc-550 mt-1">
+                          <div className="flex justify-between items-center text-xs text-zinc-400 mt-1">
                             <span>{c.telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}</span>
                             {c.lastCut && (
-                              <span className="text-barber-accent-light text-[9px] font-medium flex items-center gap-0.5">
+                              <span className="text-barber-accent-light text-xs font-medium flex items-center gap-0.5">
                                 <CutsIcon className="w-2.5 h-2.5" />
                                 {formatRelativeTime(c.lastCut.data)}
                               </span>
@@ -412,7 +407,7 @@ export default function BarberLayout() {
                       );
                     })}
                     {clientes.length === 0 && (
-                      <div className="text-center py-6 text-zinc-650 select-none">Nenhum cliente encontrado</div>
+                      <div className="text-center py-6 text-zinc-400 select-none">Nenhum cliente encontrado</div>
                     )}
                   </div>
                 </div>
@@ -437,7 +432,7 @@ export default function BarberLayout() {
             <>
               {/* Datepicker */}
               <div className="p-4 border-b border-barber-border/30 bg-barber-card/25 flex flex-col gap-2 select-none">
-                <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest block">Selecione o Dia</span>
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">Selecione o Dia</span>
                 <input
                   type="date"
                   className="w-full bg-barber-dark border border-barber-border text-xs rounded-lg p-2 text-zinc-200"
@@ -449,8 +444,8 @@ export default function BarberLayout() {
               {/* Appointments list */}
               <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-3">
                 <div className="flex justify-between items-center px-1 select-none">
-                  <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest">Agendados do Dia</span>
-                  <span className="text-[9px] font-bold text-barber-accent-light">{agendamentos.length} cortes</span>
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Agendados do Dia</span>
+                  <span className="text-xs font-bold text-barber-accent-light">{agendamentos.length} cortes</span>
                 </div>
 
                 <div className="space-y-2">
@@ -465,11 +460,11 @@ export default function BarberLayout() {
                         className={`p-3 rounded-lg border text-xs cursor-pointer transition-all space-y-1.5 bg-barber-dark/30 border-barber-border hover:border-zinc-700`}
                       >
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-barber-accent flex items-center gap-1">
+                          <span className="text-xs font-bold text-barber-accent flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5" />
                             {formatTime(ag.dataHora)}
                           </span>
-                           <span className={`text-[8px] font-bold px-1.5 rounded uppercase ${ag.status === 'Concluído'
+                           <span className={`text-xs font-bold px-1.5 rounded uppercase ${ag.status === 'Concluído'
                             ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                             : ag.status === 'Confirmado'
                               ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
@@ -483,7 +478,7 @@ export default function BarberLayout() {
                         </div>
 
                         <span className="font-semibold text-zinc-100 block truncate">{clientName}</span>
-                        <div className="flex justify-between items-center text-[10px] text-zinc-500">
+                        <div className="flex justify-between items-center text-xs text-zinc-400">
                           <span>{ag.servicos}</span>
 
                           <div className="flex gap-2 items-center" onClick={e => e.stopPropagation()}>
@@ -494,7 +489,7 @@ export default function BarberLayout() {
                                 )}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 px-1.5 py-0.5 rounded transition-all font-semibold cursor-pointer"
+                                className="flex items-center gap-1 text-xs bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 px-1.5 py-0.5 rounded transition-all font-semibold cursor-pointer"
                                 title="Falar no WhatsApp"
                               >
                                 <MessageSquare className="w-3 h-3" />
@@ -529,7 +524,7 @@ export default function BarberLayout() {
                     );
                   })}
                   {agendamentos.length === 0 && (
-                    <div className="text-center py-8 text-zinc-650 text-xs select-none">Agenda vazia</div>
+                    <div className="text-center py-8 text-zinc-400 text-xs select-none">Agenda vazia</div>
                   )}
                 </div>
               </div>
@@ -547,16 +542,17 @@ export default function BarberLayout() {
             </>
           )}
 
+          {sidebarTab === 'settings' && <div className="sidebar-context"><span className="eyebrow">Sua barbearia</span><h2>Do seu jeito.</h2><p>Organize seus serviços, horários e preferências de atendimento.</p><Scissors size={48} strokeWidth={.8} aria-hidden="true" /></div>}
           {/* Render TAB content: METRICS SHORTCUT PANEL */}
           {sidebarTab === 'metrics' && (
             <div className="p-4 space-y-4 flex flex-col h-full overflow-y-auto no-scrollbar select-none">
               <div className="flex justify-between items-center px-1">
-                <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-widest">Resumo Financeiro</span>
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Resumo Financeiro</span>
               </div>
               <div className="space-y-3">
                 <div className="bg-barber-dark/30 border border-barber-border/80 p-4 rounded-xl">
-                  <span className="text-[10px] text-zinc-555 uppercase font-bold block">Relatórios Integrados</span>
-                  <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">
+                  <span className="text-xs text-zinc-400 uppercase font-bold block">Relatórios Integrados</span>
+                  <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
                     Use o painel ao lado para analisar faturamento diário e mensal, conferir o ticket médio por cliente, acompanhar a taxa de retorno de 30 dias e disparar alertas pós-venda para clientes ausentes.
                   </p>
                 </div>
@@ -566,8 +562,8 @@ export default function BarberLayout() {
                     <TrendingUp className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[9px] text-zinc-555 uppercase font-bold block">Faturamento</span>
-                    <span className="text-[11px] font-bold text-zinc-300">Estimativas automáticas</span>
+                    <span className="text-xs text-zinc-400 uppercase font-bold block">Faturamento</span>
+                    <span className="text-xs font-bold text-zinc-300">Estimativas automáticas</span>
                   </div>
                 </div>
 
@@ -576,8 +572,8 @@ export default function BarberLayout() {
                     <Users className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[9px] text-zinc-555 uppercase font-bold block">Pós-venda</span>
-                    <span className="text-[11px] font-bold text-zinc-300">Resgate via WhatsApp</span>
+                    <span className="text-xs text-zinc-400 uppercase font-bold block">Pós-venda</span>
+                    <span className="text-xs font-bold text-zinc-300">Resgate via WhatsApp</span>
                   </div>
                 </div>
               </div>

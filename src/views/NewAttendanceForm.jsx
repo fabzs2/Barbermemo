@@ -95,15 +95,15 @@ export default function NewAttendanceForm() {
     return (
       <div className="p-8 flex items-center justify-center flex-col space-y-4">
         <div className="w-8 h-8 border-3 border-barber-accent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-zinc-550 text-xs font-semibold">Buscando perfil do cliente...</span>
+        <span className="text-zinc-400 text-xs font-semibold">Buscando perfil do cliente...</span>
       </div>
     );
   }
 
   if (!activeClient) {
     return (
-      <div className="p-8 text-center text-zinc-550 max-w-sm mx-auto space-y-3">
-        <AlertCircle className="w-8 h-8 mx-auto text-zinc-650" />
+      <div className="p-8 text-center text-zinc-400 max-w-sm mx-auto space-y-3">
+        <AlertCircle className="w-8 h-8 mx-auto text-zinc-400" />
         <h3 className="text-zinc-300 font-bold">Cliente inválido</h3>
         <p className="text-xs">Não foi possível localizar o cliente para iniciar o atendimento.</p>
         <button onClick={() => navigate('/dashboard')} className="bg-zinc-800 text-xs font-bold py-2 px-4 rounded-xl font-sans">
@@ -114,7 +114,7 @@ export default function NewAttendanceForm() {
   }
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col font-sans fade-in">
+    <div className="p-5 md:p-10 min-h-full flex flex-col font-sans content-page fade-in">
       
       {/* Mobile Back Header */}
       <div className="md:hidden flex items-center gap-2 mb-4">
@@ -129,11 +129,11 @@ export default function NewAttendanceForm() {
           <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
             Registrar Atendimento
           </h2>
-          <p className="text-xs text-zinc-500 mt-0.5">Fórmula técnica para o cliente: <strong>{activeClient.nome}</strong></p>
+          <p className="text-xs text-zinc-400 mt-0.5">Fórmula técnica para o cliente: <strong>{activeClient.nome}</strong></p>
         </div>
         <button
           onClick={() => navigate(`/clientes/${id}`)}
-          className="text-zinc-550 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer"
+          className="text-zinc-400 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Cancelar
@@ -146,11 +146,11 @@ export default function NewAttendanceForm() {
         {/* Profile Card (Desktop Only - Left Pane) */}
         <div className="hidden md:block md:col-span-4 space-y-4 h-fit sticky top-0">
           <div className="bg-barber-card border border-barber-border rounded-xl p-4 space-y-4 shadow-sm select-none">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block font-sans">Metadados e Alertas</span>
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block font-sans">Metadados e Alertas</span>
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between">
-                <span className="text-zinc-500 font-sans">Prazo de Retorno</span>
+                <span className="text-zinc-400 font-sans">Prazo de Retorno</span>
                 <span className="font-semibold text-zinc-300 font-sans">{activeClient.intervaloDiasRetorno} dias</span>
               </div>
 
@@ -164,11 +164,11 @@ export default function NewAttendanceForm() {
                   return (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-zinc-550 font-sans">Última Visita</span>
+                        <span className="text-zinc-400 font-sans">Última Visita</span>
                         <span className="font-semibold text-zinc-300 font-sans">{formatDate(last.data)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-550 font-sans">Intervalo Decorrido</span>
+                        <span className="text-zinc-400 font-sans">Intervalo Decorrido</span>
                         <span className={`font-semibold font-sans ${isOverdue ? 'text-amber-500' : 'text-emerald-500'}`}>
                           {elapsed === 0 ? 'Hoje' : `${elapsed} dias`}
                         </span>
@@ -177,7 +177,7 @@ export default function NewAttendanceForm() {
                   );
                 })()
               ) : (
-                <div className="text-amber-500 font-semibold text-[11px] font-sans">Nenhum histórico</div>
+                <div className="text-amber-500 font-semibold text-xs font-sans">Nenhum histórico</div>
               )}
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function NewAttendanceForm() {
                   required
                   disabled={saving}
                   placeholder="Ex: Degradê navalhado do 0 ao 2..."
-                  className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-650"
+                  className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-400"
                   value={form.laterais}
                   onChange={(e) => setForm({ ...form, laterais: e.target.value })}
                 />
@@ -208,7 +208,7 @@ export default function NewAttendanceForm() {
                       type="button"
                       disabled={saving}
                       onClick={() => handlePillClick('laterais', val)}
-                      className="bg-zinc-850 text-[9px] text-zinc-400 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
+                      className="bg-zinc-850 text-xs text-zinc-400 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
                     >
                       {val}
                     </button>
@@ -235,7 +235,7 @@ export default function NewAttendanceForm() {
                       type="button"
                       disabled={saving}
                       onClick={() => handlePillClick('topo', val)}
-                      className="bg-zinc-855 text-[9px] text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
+                      className="bg-zinc-855 text-xs text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
                     >
                       {val}
                     </button>
@@ -261,7 +261,7 @@ export default function NewAttendanceForm() {
                       type="button"
                       disabled={saving}
                       onClick={() => handlePillClick('barba', val)}
-                      className="bg-zinc-855 text-[9px] text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
+                      className="bg-zinc-855 text-xs text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
                     >
                       {val}
                     </button>
@@ -287,7 +287,7 @@ export default function NewAttendanceForm() {
                       type="button"
                       disabled={saving}
                       onClick={() => handlePillClick('produtos', val)}
-                      className="bg-zinc-855 text-[9px] text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
+                      className="bg-zinc-855 text-xs text-zinc-450 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 font-sans transition-all cursor-pointer"
                     >
                       {val}
                     </button>

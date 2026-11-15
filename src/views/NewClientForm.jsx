@@ -91,13 +91,13 @@ export default function NewClientForm() {
     return (
       <div className="p-8 flex items-center justify-center flex-col space-y-4">
         <div className="w-8 h-8 border-3 border-barber-accent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-zinc-500 text-xs font-semibold">Carregando dados...</span>
+        <span className="text-zinc-400 text-xs font-semibold">Carregando dados...</span>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-xl mx-auto w-full space-y-6 fade-in font-sans">
+    <div className="p-5 md:p-10 max-w-2xl mx-auto w-full space-y-6 content-page fade-in font-sans">
       
       {/* Back button */}
       <div className="flex justify-between items-center select-none">
@@ -106,14 +106,14 @@ export default function NewClientForm() {
         </h2>
         <button
           onClick={handleBack}
-          className="text-zinc-500 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer font-sans"
+          className="text-zinc-400 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer font-sans"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Cancelar
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-barber-card border border-barber-border rounded-2xl p-6 space-y-4 shadow-xl">
+      <form onSubmit={handleSubmit} className="bg-barber-card border border-barber-border rounded-lg p-6 space-y-4 shadow-none">
         
         {/* Name input */}
         <div className="space-y-1.5">
@@ -123,7 +123,7 @@ export default function NewClientForm() {
             required
             disabled={saving}
             placeholder="Ex: João Silva"
-            className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-650"
+            className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-400"
             value={form.nome}
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
           />
@@ -137,7 +137,7 @@ export default function NewClientForm() {
             required
             disabled={saving}
             placeholder="Ex: 11988887777"
-            className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-650"
+            className="w-full bg-barber-dark border border-barber-border rounded-lg py-2.5 px-3 text-xs text-barber-text-primary placeholder:text-zinc-400"
             value={form.telefone}
             onChange={(e) => setForm({ ...form, telefone: e.target.value })}
           />

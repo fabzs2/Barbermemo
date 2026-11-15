@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Calendar, Clock, Plus, Check, X,
-  User, UserCheck, Scissors, ExternalLink, RefreshCw, MessageSquare
+  User, UserCheck, Scissors, RefreshCw, MessageSquare
 } from 'lucide-react';
 import { db } from '../db';
 
@@ -34,12 +34,14 @@ export default function CalendarView() {
 
   const navigate = useNavigate();
 
-  const [viewMode, setViewMode] = useState('week'); // week | day
+  const [viewMode, setViewMode] = useState(() => window.matchMedia('(max-width: 767px)').matches ? 'day' : 'week'); // week | day
   const [baseDate, setBaseDate] = useState(new Date(selectedDate + 'T00:00:00'));
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null); // for appointment details popup
   const [actionLoading, setActionLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const requestVersion = useRef(0);
 
   // Timezone-safe local string helpers
   const toLocalDateStr = (d) => {
@@ -69,30 +71,35 @@ export default function CalendarView() {
   const weekDays = getWeekDays(baseDate);
 
   // Fetch range appointments
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     if (!currentUser) return;
+    const version = ++requestVersion.current;
     setLoading(true);
+    setLoadError('');
+    setAppointments([]);
     try {
       let startStr, endStr;
       if (viewMode === 'week') {
-        startStr = toLocalDateStr(weekDays[0]);
-        endStr = toLocalDateStr(weekDays[6]);
+        startStr = toLocalDateStr(getWeekDays(baseDate)[0]);
+        endStr = toLocalDateStr(getWeekDays(baseDate)[6]);
       } else {
         startStr = toLocalDateStr(baseDate);
         endStr = startStr;
       }
       const data = await db.getAgendamentosRange(currentUser.id, startStr, endStr);
-      setAppointments(data);
+      if (version === requestVersion.current) setAppointments(data);
     } catch (error) {
       console.error('Erro ao buscar agendamentos para o calendário:', error);
+      if (version === requestVersion.current) setLoadError('Não foi possível carregar a agenda. Tente recarregar.');
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
-  };
+  }, [baseDate, viewMode, currentUser]);
 
   useEffect(() => {
     fetchAppointments();
-  }, [baseDate, viewMode, currentUser]);
+    return () => { requestVersion.current += 1; };
+  }, [fetchAppointments]);
 
   // Navigate baseDate
   const handlePrev = () => {
@@ -199,11 +206,11 @@ export default function CalendarView() {
       const { hours, minutes } = parseTime(app.dataHora);
       const startDecimal = hours + minutes / 60;
       
-      if (startDecimal < START_HOUR || startDecimal > END_HOUR + 1) return null;
+      if (startDecimal < START_HOUR || startDecimal >= END_HOUR + 1) return null;
 
       const duration = getServiceDuration(app.servicos);
       const topPx = (startDecimal - START_HOUR) * HOUR_HEIGHT;
-      const heightPx = (duration / 60) * HOUR_HEIGHT;
+      const heightPx = Math.min(duration / 60, END_HOUR + 1 - startDecimal) * HOUR_HEIGHT;
 
       let statusColor = 'bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20';
       if (app.status === 'Confirmado') {
@@ -215,6 +222,9 @@ export default function CalendarView() {
       return (
         <div
           key={app.id}
+          role="button" tabIndex={0}
+          aria-label={`${app.cliente?.nome || 'Cliente'}, ${new Date(app.dataHora).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}, ${app.status}`}
+          onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedApp(app); } }}
           className={`absolute left-1 right-1 rounded-lg border p-1 text-[10px] leading-tight flex flex-col justify-between overflow-hidden shadow-sm cursor-pointer select-none transition-all group hover:z-10 ${statusColor}`}
           style={{ top: `${topPx + 2}px`, height: `${heightPx - 4}px` }}
           onClick={(e) => {
@@ -232,7 +242,7 @@ export default function CalendarView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-barber-dark font-sans select-none">
+    <div className="barber-calendar flex-1 flex flex-col h-full overflow-hidden bg-barber-dark font-sans">
       
       {/* Calendar Header Control Bar */}
       <div className="p-4 border-b border-barber-border bg-barber-card/25 flex flex-wrap items-center justify-between gap-3 shrink-0">
@@ -241,21 +251,22 @@ export default function CalendarView() {
             <Calendar className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-xs font-bold text-zinc-200 uppercase tracking-widest font-sans">Agenda Virtual</h2>
+            <h2 className="calendar-title">Sua agenda</h2>
             <span className="text-[10px] text-zinc-500 capitalize">{getHeaderMonthYear()}</span>
           </div>
         </div>
 
+        <button className="primary-action" onClick={() => navigate('/agendamentos/novo', { state: { prefilledDate: selectedDate } })}><Plus size={17} /> Agendar horário</button>
         {/* View mode toggle */}
         <div className="flex bg-zinc-950 p-0.5 rounded-lg border border-barber-border/80">
           <button
-            onClick={() => setViewMode('week')}
+            aria-pressed={viewMode === 'week'} onClick={() => setViewMode('week')}
             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all cursor-pointer ${viewMode === 'week' ? 'bg-barber-accent text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Semana
           </button>
           <button
-            onClick={() => setViewMode('day')}
+            aria-pressed={viewMode === 'day'} onClick={() => setViewMode('day')}
             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all cursor-pointer ${viewMode === 'day' ? 'bg-barber-accent text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
           >
             Dia
@@ -265,6 +276,7 @@ export default function CalendarView() {
         {/* Navigator buttons */}
         <div className="flex items-center gap-2">
           <button
+            aria-label="Período anterior"
             onClick={handlePrev}
             className="p-2 bg-barber-card hover:bg-zinc-800 border border-barber-border rounded-lg text-zinc-400 hover:text-white cursor-pointer"
           >
@@ -277,6 +289,7 @@ export default function CalendarView() {
             Hoje
           </button>
           <button
+            aria-label="Próximo período"
             onClick={handleNext}
             className="p-2 bg-barber-card hover:bg-zinc-800 border border-barber-border rounded-lg text-zinc-400 hover:text-white cursor-pointer"
           >
@@ -292,13 +305,15 @@ export default function CalendarView() {
         </div>
       </div>
 
+      <div className="calendar-summary" role="status">{loadError || (loading ? 'Atualizando horários…' : `${appointments.length} atendimento${appointments.length === 1 ? '' : 's'} no período`)}<span>Duração dos blocos estimada pelo serviço</span></div>
       {/* Grid container with hours and columns */}
       <div className="flex-1 overflow-auto no-scrollbar relative min-h-0">
         
-        <div className="flex min-w-[700px] md:min-w-0" style={{ height: `${HOURS.length * HOUR_HEIGHT}px` }}>
+        <div className={`flex ${viewMode === 'week' ? 'min-w-[700px]' : 'min-w-0'}`} style={{ height: `${HOURS.length * HOUR_HEIGHT + 56}px` }}>
           
           {/* Left vertical hours axis */}
           <div className="w-14 border-r border-barber-border/40 select-none bg-barber-dark sticky left-0 z-20 shrink-0">
+            <div className="calendar-axis-spacer" />
             {HOURS.map(hour => (
               <div
                 key={hour}
@@ -314,7 +329,7 @@ export default function CalendarView() {
           <div className="flex-1 flex divide-x divide-barber-border/30 relative">
             
             {/* Background grid line borders */}
-            <div className="absolute inset-0 pointer-events-none z-0 flex flex-col">
+            <div className="absolute inset-x-0 bottom-0 top-[56px] pointer-events-none z-0 flex flex-col">
               {HOURS.map(hour => (
                 <div key={hour} className="border-b border-barber-border/20" style={{ height: `${HOUR_HEIGHT}px` }}></div>
               ))}
@@ -328,7 +343,7 @@ export default function CalendarView() {
                 return (
                   <div key={idx} className="flex-1 relative min-h-full group hover:bg-zinc-850/5">
                     {/* Header showing weekday name and number */}
-                    <div className="sticky top-0 bg-barber-card/65 backdrop-blur-sm border-b border-barber-border/40 py-1.5 px-2 text-center z-10 select-none">
+                    <div className="calendar-day-heading sticky top-0 bg-barber-card/65 backdrop-blur-sm border-b border-barber-border/40 py-1.5 px-2 text-center z-10 select-none">
                       <span className="text-[9px] text-zinc-500 uppercase font-black block tracking-wider font-sans">
                         {day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
                       </span>
@@ -361,7 +376,7 @@ export default function CalendarView() {
                 const isToday = toLocalDateStr(new Date()) === dateStr;
                 return (
                   <div className="flex-1 relative min-h-full">
-                    <div className="sticky top-0 bg-barber-card/65 backdrop-blur-sm border-b border-barber-border/40 py-2.5 px-4 z-10 flex items-center justify-between select-none">
+                    <div className="calendar-day-heading sticky top-0 bg-barber-card/65 backdrop-blur-sm border-b border-barber-border/40 py-2.5 px-4 z-10 flex items-center justify-between select-none">
                       <span className="text-xs font-bold text-zinc-300 flex items-center gap-1">
                         Dia selecionado: <strong className="text-barber-accent-light">{baseDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</strong>
                       </span>
@@ -475,7 +490,7 @@ export default function CalendarView() {
                   </a>
                 )}
                 <div className="flex gap-2">
-                  {selectedApp.status !== 'Concluído' && (
+                  {selectedApp.status !== 'Concluído' && selectedApp.clienteId && (
                     <button
                       onClick={() => {
                         navigate(`/clientes/${selectedApp.clienteId}/atendimentos/novo`, {

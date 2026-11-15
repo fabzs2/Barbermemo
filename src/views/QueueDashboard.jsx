@@ -111,7 +111,7 @@ export default function QueueDashboard() {
   const statusInfo = getStatusDetails(currentUser?.statusFila);
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col font-sans fade-in max-w-2xl mx-auto">
+    <div className="p-5 md:p-10 min-h-full flex flex-col font-sans content-page fade-in max-w-4xl mx-auto w-full">
       
       {/* Header Panel */}
       <div className="flex justify-between items-center border-b border-barber-border/50 pb-4 mb-4 select-none shrink-0">
@@ -121,7 +121,7 @@ export default function QueueDashboard() {
             Fila de Espera Virtual
           </h2>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${statusInfo.color}`}>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${statusInfo.color}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot} ${currentUser?.statusFila === 'disponivel' ? 'animate-pulse' : ''}`}></span>
               {statusInfo.label}
             </span>
@@ -140,7 +140,7 @@ export default function QueueDashboard() {
           
           <button
             onClick={() => navigate('/clientes/novo')}
-            className="bg-barber-accent hover:bg-barber-accent-hover text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-sm shadow-barber-accent/15"
+            className="bg-barber-accent hover:bg-barber-accent-hover text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-sm shadow-barber-accent/15"
           >
             <UserPlus className="w-3.5 h-3.5" />
             Cadastrar Cliente
@@ -150,29 +150,29 @@ export default function QueueDashboard() {
 
       {/* Quick Status Bar */}
       <div className="bg-barber-card border border-barber-border rounded-xl p-4 mb-5 select-none shrink-0">
-        <span className="text-[9.5px] font-bold text-zinc-550 uppercase tracking-widest block mb-2.5">Alterar Meu Status de Trabalho</span>
+        <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-2.5">Alterar Meu Status de Trabalho</span>
         <div className="grid grid-cols-4 gap-2">
           <button
             onClick={() => handleStatusChange('disponivel')}
-            className={`py-2 px-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'disponivel' ? 'bg-emerald-600/10 border-emerald-500/40 text-emerald-400' : 'bg-zinc-950/20 border-barber-border text-zinc-500 hover:text-zinc-350'}`}
+            className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'disponivel' ? 'bg-emerald-600/10 border-emerald-500/40 text-emerald-400' : 'bg-zinc-950/20 border-barber-border text-zinc-400 hover:text-zinc-350'}`}
           >
             🟢 Disponível
           </button>
           <button
             onClick={() => handleStatusChange('almoco')}
-            className={`py-2 px-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'almoco' ? 'bg-amber-600/10 border-amber-500/40 text-amber-400' : 'bg-zinc-950/20 border-barber-border text-zinc-500 hover:text-zinc-350'}`}
+            className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'almoco' ? 'bg-amber-600/10 border-amber-500/40 text-amber-400' : 'bg-zinc-950/20 border-barber-border text-zinc-400 hover:text-zinc-350'}`}
           >
             🟡 Almoço
           </button>
           <button
             onClick={() => handleStatusChange('pausa')}
-            className={`py-2 px-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'pausa' ? 'bg-orange-600/10 border-orange-500/40 text-orange-400' : 'bg-zinc-950/20 border-barber-border text-zinc-500 hover:text-zinc-350'}`}
+            className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'pausa' ? 'bg-orange-600/10 border-orange-500/40 text-orange-400' : 'bg-zinc-950/20 border-barber-border text-zinc-400 hover:text-zinc-350'}`}
           >
             ☕ Pausa
           </button>
           <button
             onClick={() => handleStatusChange('ausente')}
-            className={`py-2 px-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'ausente' ? 'bg-red-600/10 border-red-500/40 text-red-400' : 'bg-zinc-950/20 border-barber-border text-zinc-500 hover:text-zinc-350'}`}
+            className={`py-2 px-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${currentUser?.statusFila === 'ausente' ? 'bg-red-600/10 border-red-500/40 text-red-400' : 'bg-zinc-950/20 border-barber-border text-zinc-400 hover:text-zinc-350'}`}
           >
             🔴 Ausente
           </button>
@@ -183,21 +183,21 @@ export default function QueueDashboard() {
         
         {/* 1. Active Client Card (Chair) */}
         <div className="space-y-2">
-          <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block select-none">Em Atendimento (Na Cadeira)</span>
+          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block select-none">Em Atendimento (Na Cadeira)</span>
           {activeClient ? (
-            <div className="bg-gradient-to-r from-emerald-950/10 to-zinc-900 border border-emerald-500/25 rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between sm:items-center gap-4 fade-in">
+            <div className="bg-gradient-to-r from-emerald-950/10 to-zinc-900 border border-emerald-500/25 rounded-lg p-5 shadow-lg relative overflow-hidden flex flex-col sm:flex-row justify-between sm:items-center gap-4 content-page fade-in">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
               
               <div className="min-w-0 z-10">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wider select-none animate-pulse">Cortando Agora</span>
-                  <span className="text-zinc-500 text-[10px] select-none font-sans">• {activeClient.servicos}</span>
+                  <span className="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wider select-none animate-pulse">Cortando Agora</span>
+                  <span className="text-zinc-400 text-xs select-none font-sans">• {activeClient.servicos}</span>
                 </div>
                 <h3 className="font-extrabold text-base text-zinc-200 truncate">{activeClient.cliente?.nome}</h3>
                 
                 {activeClient.cliente?.telefone && (
                   <div className="flex items-center gap-2 mt-2 select-none">
-                    <span className="text-[11px] text-zinc-400 select-all font-sans font-medium">
+                    <span className="text-xs text-zinc-400 select-all font-sans font-medium">
                       {activeClient.cliente.telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
                     </span>
                     <a
@@ -218,7 +218,7 @@ export default function QueueDashboard() {
               <div className="flex gap-2 shrink-0 z-10 select-none">
                 <button
                   onClick={() => handleRemoveFromQueue(activeClient.id)}
-                  className="bg-zinc-950/40 hover:bg-red-950/20 border border-zinc-800 hover:border-red-900/40 text-zinc-550 hover:text-red-400 p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                  className="bg-zinc-950/40 hover:bg-red-950/20 border border-zinc-800 hover:border-red-900/40 text-zinc-400 hover:text-red-400 p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center"
                   title="Cancelar Corte"
                 >
                   <X className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function QueueDashboard() {
               </div>
             </div>
           ) : (
-            <div className="border border-dashed border-barber-border rounded-2xl p-6 text-center text-zinc-600 select-none text-xs bg-zinc-950/10">
+            <div className="border border-dashed border-barber-border rounded-lg p-6 text-center text-zinc-600 select-none text-xs bg-zinc-950/10">
               Ninguém na cadeira no momento. Chame o primeiro da fila de espera!
             </div>
           )}
@@ -247,8 +247,8 @@ export default function QueueDashboard() {
         {/* 2. Waiting List (Queue) */}
         <div className="space-y-3">
           <div className="flex justify-between items-center select-none px-1">
-            <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">Próximos da Fila (Lista de Espera)</span>
-            <div className="flex gap-3 text-[10px] text-zinc-550 font-bold uppercase">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">Próximos da Fila (Lista de Espera)</span>
+            <div className="flex gap-3 text-xs text-zinc-400 font-bold uppercase">
               <span>{waitingList.length} pessoas</span>
               {totalWaitTime > 0 && <span className="text-barber-accent-light">~{totalWaitTime} min total</span>}
             </div>
@@ -260,7 +260,7 @@ export default function QueueDashboard() {
               return (
                 <div
                   key={app.id}
-                  className="bg-barber-card border border-barber-border hover:border-zinc-800/80 rounded-xl p-4 transition-all flex justify-between items-center gap-4 fade-in"
+                  className="bg-barber-card border border-barber-border hover:border-zinc-800/80 rounded-xl p-4 transition-all flex justify-between items-center gap-4 content-page fade-in"
                 >
                   <div className="min-w-0 flex items-center gap-3.5">
                     {/* Position circle */}
@@ -270,11 +270,11 @@ export default function QueueDashboard() {
                     
                     <div className="min-w-0">
                       <h4 className="font-extrabold text-sm text-zinc-200 truncate">{app.cliente?.nome}</h4>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[10px] text-zinc-500 font-sans select-none">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs text-zinc-400 font-sans select-none">
                         <span>{app.servicos}</span>
                         <span>•</span>
                         <span className="flex items-center gap-0.5">
-                          <Clock className="w-3 h-3 text-zinc-650" />
+                          <Clock className="w-3 h-3 text-zinc-400" />
                           Entrou às {new Date(app.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -306,7 +306,7 @@ export default function QueueDashboard() {
 
                     <button
                       onClick={() => handleCallToChair(app.id)}
-                      className="bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 hover:text-emerald-350 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                      className="bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 hover:text-emerald-350 px-3 py-1.5 rounded-lg text-xs font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                     >
                       <Play className="w-3 h-3 fill-emerald-450 text-emerald-400" />
                       Chamar
@@ -317,7 +317,7 @@ export default function QueueDashboard() {
             })}
 
             {waitingList.length === 0 && (
-              <div className="border border-dashed border-barber-border/60 rounded-xl p-8 text-center text-zinc-650 text-xs select-none">
+              <div className="border border-dashed border-barber-border/60 rounded-xl p-8 text-center text-zinc-400 text-xs select-none">
                 Nenhum cliente aguardando na fila. Compartilhe seu link público!
               </div>
             )}

@@ -96,9 +96,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <div className="barber-system"><AuthProvider>
         <AppRoutes />
-      </AuthProvider>
+      </AuthProvider></div>
     </BrowserRouter>
   );
 }

@@ -315,7 +315,7 @@ export default function PublicBookingView() {
 
       return (
         <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none">
-          <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl p-6 text-center space-y-6 shadow-2xl fade-in">
+          <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-lg p-6 text-center space-y-6 shadow-none content-page fade-in">
             {currentStatus === 'Confirmado' ? (
               <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto text-emerald-400 animate-bounce">
                 <Scissors className="w-8 h-8" />
@@ -350,11 +350,11 @@ export default function PublicBookingView() {
             {currentStatus === 'Pendente' && positionInLine !== null && (
               <div className="grid grid-cols-2 gap-4 bg-zinc-950/20 p-4 rounded-xl border border-barber-border/30 text-xs">
                 <div className="text-center border-r border-barber-border/30">
-                  <span className="text-[9px] text-zinc-550 uppercase font-black block select-none">Sua Posição</span>
+                  <span className="text-xs text-zinc-400 uppercase font-black block select-none">Sua Posição</span>
                   <span className="font-extrabold text-2xl text-barber-accent-light mt-1 block">#{positionInLine}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-[9px] text-zinc-550 uppercase font-black block select-none">Espera Estimada</span>
+                  <span className="text-xs text-zinc-400 uppercase font-black block select-none">Espera Estimada</span>
                   <span className="font-extrabold text-2xl text-zinc-200 mt-1 block">~{estimatedWait} min</span>
                 </div>
               </div>
@@ -362,15 +362,15 @@ export default function PublicBookingView() {
 
             <div className="bg-barber-dark/50 border border-barber-border rounded-xl p-4 text-left text-xs space-y-3 font-sans">
               <div className="flex justify-between border-b border-barber-border/40 pb-2">
-                <span className="text-zinc-550">Profissional</span>
+                <span className="text-zinc-400">Profissional</span>
                 <span className="font-bold text-zinc-200">{targetBarber.nome}</span>
               </div>
               <div className="flex justify-between border-b border-barber-border/40 pb-2">
-                <span className="text-zinc-550">Serviço</span>
+                <span className="text-zinc-400">Serviço</span>
                 <span className="font-bold text-zinc-200">{successData.servicos}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-550">Status</span>
+                <span className="text-zinc-400">Status</span>
                 <span className={`font-bold capitalize ${currentStatus === 'Confirmado' ? 'text-emerald-400' : currentStatus === 'Concluído' ? 'text-blue-400' : 'text-amber-500'}`}>
                   {currentStatus === 'Confirmado' ? 'Na Cadeira' : currentStatus === 'Concluído' ? 'Concluído' : 'Aguardando na Fila'}
                 </span>
@@ -414,7 +414,7 @@ export default function PublicBookingView() {
 
     return (
       <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex flex-col items-center justify-center gap-4 select-none">
-        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl shadow-xl overflow-hidden fade-in flex flex-col">
+        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-lg shadow-none overflow-hidden content-page fade-in flex flex-col">
           
           <div className="p-5 border-b border-barber-border bg-barber-dark/40 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-barber-accent/10 border border-barber-accent/25 flex items-center justify-center text-barber-accent">
@@ -422,14 +422,14 @@ export default function PublicBookingView() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{barberInfo.barbearia_name || 'Barbearia'}</h1>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">Fila de espera em tempo real</p>
+              <p className="text-xs text-zinc-400 font-bold uppercase mt-0.5">Fila de espera em tempo real</p>
             </div>
           </div>
 
           <div className="p-5 space-y-4">
             
             <div className="space-y-3">
-              <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block">Profissionais Disponíveis</span>
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">Profissionais Disponíveis</span>
               <div className="space-y-3">
                 {shopBarbers.map((barber) => {
                   const queueList = barbersQueues[barber.id] || [];
@@ -490,7 +490,7 @@ export default function PublicBookingView() {
                     >
                       <div className="min-w-0">
                         <h4 className="font-extrabold text-sm text-zinc-200 truncate">{barber.nome}</h4>
-                        <div className="flex items-center gap-1.5 mt-1 font-sans text-[10px] font-bold">
+                        <div className="flex items-center gap-1.5 mt-1 font-sans text-xs font-bold">
                           <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`}></span>
                           <span className={statusColor}>{statusText}</span>
                         </div>
@@ -511,14 +511,14 @@ export default function PublicBookingView() {
         </div>
 
         {/* Inline Join Form Card */}
-        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl shadow-xl p-5 fade-in">
+        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-lg shadow-none p-5 content-page fade-in">
           <form onSubmit={handleJoinQueueSubmit} className="space-y-4">
-            <span className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest block select-none">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block select-none">
               Entrar na Fila Virtual
             </span>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Nome Completo</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">Nome Completo</label>
               <input
                 type="text"
                 required
@@ -530,7 +530,7 @@ export default function PublicBookingView() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Celular / WhatsApp</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">Celular / WhatsApp</label>
               <input
                 type="text"
                 required
@@ -542,7 +542,7 @@ export default function PublicBookingView() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">Selecione o Serviço</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">Selecione o Serviço</label>
               <div className="grid grid-cols-2 gap-2">
                 {((shopBarbers.find(b => b.id === selectedBarberId) || barberInfo)?.servicos_config || SERVICES).map((service) => (
                   <div
@@ -554,8 +554,8 @@ export default function PublicBookingView() {
                         : 'border-barber-border bg-zinc-900/10 hover:border-zinc-700/60'
                     }`}
                   >
-                    <span className="text-[10.5px] font-bold text-zinc-200">{service.name}</span>
-                    <div className="flex justify-between items-center mt-2 text-[9px] text-zinc-550">
+                    <span className="text-xs font-bold text-zinc-200">{service.name}</span>
+                    <div className="flex justify-between items-center mt-2 text-xs text-zinc-400">
                       <span>{service.duration} min</span>
                       <span className="font-bold text-barber-accent-light">{service.price}</span>
                     </div>
@@ -614,7 +614,7 @@ export default function PublicBookingView() {
   if (successData) {
     return (
       <div className="min-h-screen bg-barber-dark text-barber-text-primary flex flex-col items-center justify-center p-4 font-sans select-none">
-        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl p-6 text-center space-y-6 shadow-2xl fade-in">
+        <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-lg p-6 text-center space-y-6 shadow-none content-page fade-in">
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto text-emerald-400">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -629,25 +629,25 @@ export default function PublicBookingView() {
           {/* Details Box */}
           <div className="bg-barber-dark/50 border border-barber-border rounded-xl p-4 text-left text-xs space-y-3 font-sans">
             <div className="flex justify-between border-b border-barber-border/40 pb-2">
-              <span className="text-zinc-550">Barbeiro</span>
+              <span className="text-zinc-400">Barbeiro</span>
               <span className="font-bold text-zinc-200">{barberInfo.nome}</span>
             </div>
             {barberInfo.barbearia_name && (
               <div className="flex justify-between border-b border-barber-border/40 pb-2">
-                <span className="text-zinc-550">Barbearia</span>
+                <span className="text-zinc-400">Barbearia</span>
                 <span className="font-bold text-zinc-200">{barberInfo.barbearia_name}</span>
               </div>
             )}
             <div className="flex justify-between border-b border-barber-border/40 pb-2">
-              <span className="text-zinc-550">Serviço</span>
+              <span className="text-zinc-400">Serviço</span>
               <span className="font-bold text-zinc-200">{selectedService}</span>
             </div>
             <div className="flex justify-between border-b border-barber-border/40 pb-2">
-              <span className="text-zinc-550">Data</span>
+              <span className="text-zinc-400">Data</span>
               <span className="font-bold text-zinc-200 capitalize">{successData.dateFormatted}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-550">Horário</span>
+              <span className="text-zinc-400">Horário</span>
               <span className="font-bold text-barber-accent-light">{successData.time}</span>
             </div>
           </div>
@@ -688,7 +688,7 @@ export default function PublicBookingView() {
 
   return (
     <div className="min-h-screen bg-barber-dark text-barber-text-primary p-4 pb-12 font-sans flex items-center justify-center select-none">
-      <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-2xl shadow-xl overflow-hidden fade-in flex flex-col">
+      <div className="w-full max-w-md bg-barber-card border border-barber-border rounded-lg shadow-none overflow-hidden content-page fade-in flex flex-col">
         
         {/* Header Banner */}
         <div className="p-5 border-b border-barber-border bg-barber-dark/40 flex items-center gap-3">
@@ -697,7 +697,7 @@ export default function PublicBookingView() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Agendar Horário</h1>
-            <p className="text-[10px] text-zinc-500 font-semibold mt-0.5">
+            <p className="text-xs text-zinc-400 font-semibold mt-0.5">
               Profissional: <span className="text-barber-accent-light">{barberInfo.nome}</span>
               {barberInfo.barbearia_name && ` • ${barberInfo.barbearia_name}`}
             </p>
@@ -708,7 +708,7 @@ export default function PublicBookingView() {
 
           {/* 1. Service Selection */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
               1. Selecione o Serviço
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -723,7 +723,7 @@ export default function PublicBookingView() {
                   }`}
                 >
                   <span className="text-xs font-bold text-zinc-200">{service.name}</span>
-                  <div className="flex justify-between items-center mt-2 text-[9px] text-zinc-500">
+                  <div className="flex justify-between items-center mt-2 text-xs text-zinc-400">
                     <span>{service.duration} min</span>
                     <span className="font-bold text-barber-accent-light">{service.price}</span>
                   </div>
@@ -734,7 +734,7 @@ export default function PublicBookingView() {
 
           {/* 2. Date Carousel */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
               2. Escolha o Dia
             </label>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -750,11 +750,11 @@ export default function PublicBookingView() {
                         : 'border-barber-border bg-zinc-900/20 text-zinc-400 hover:border-zinc-700/50'
                     }`}
                   >
-                    <span className="text-[8px] font-bold uppercase tracking-wider">
+                    <span className="text-xs font-bold uppercase tracking-wider">
                       {opt.weekday}
                     </span>
                     <span className="text-sm font-black my-0.5">{opt.dayNum}</span>
-                    <span className="text-[8px] uppercase">{opt.month}</span>
+                    <span className="text-xs uppercase">{opt.month}</span>
                   </div>
                 );
               })}
@@ -763,10 +763,10 @@ export default function PublicBookingView() {
 
           {/* 3. Time Slots */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block flex items-center justify-between">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block flex items-center justify-between">
               <span>3. Escolha o Horário</span>
               {loadingSlots && (
-                <span className="text-[8px] text-zinc-650 animate-pulse font-normal lowercase">Atualizando...</span>
+                <span className="text-xs text-zinc-400 animate-pulse font-normal lowercase">Atualizando...</span>
               )}
             </label>
             
@@ -788,7 +788,7 @@ export default function PublicBookingView() {
                       type="button"
                       disabled={isBooked}
                       onClick={() => setSelectedTime(time)}
-                      className={`h-9 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
+                      className={`h-9 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                         isBooked
                           ? 'border-zinc-900 bg-zinc-950/40 text-zinc-600 cursor-not-allowed line-through'
                           : isSelected
@@ -806,39 +806,39 @@ export default function PublicBookingView() {
 
           {/* 4. Identification form */}
           <div className="space-y-4 border-t border-barber-border/50 pt-4">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2">
               4. Seus Dados de Contato
             </label>
             
             <div className="space-y-3">
               <div className="relative">
-                <User className="absolute left-3 top-3 text-zinc-500 w-4 h-4" />
+                <User className="absolute left-3 top-3 text-zinc-400 w-4 h-4" />
                 <input
                   type="text"
                   required
                   placeholder="Seu Nome Completo"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  className="w-full bg-zinc-950 border border-barber-border rounded-xl py-2.5 pl-9 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-555"
+                  className="w-full bg-zinc-950 border border-barber-border rounded-xl py-2.5 pl-9 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-400"
                 />
               </div>
 
               <div className="relative">
-                <Phone className="absolute left-3 top-3 text-zinc-500 w-4 h-4" />
+                <Phone className="absolute left-3 top-3 text-zinc-400 w-4 h-4" />
                 <input
                   type="tel"
                   required
                   placeholder="Seu WhatsApp (Ex: (99) 99999-9999)"
                   value={clientPhone}
                   onChange={handlePhoneChange}
-                  className="w-full bg-zinc-950 border border-barber-border rounded-xl py-2.5 pl-9 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-555"
+                  className="w-full bg-zinc-950 border border-barber-border rounded-xl py-2.5 pl-9 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-400"
                 />
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-[10px] rounded-lg font-semibold flex items-center gap-1.5">
+            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-xs rounded-lg font-semibold flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5" />
               <span>{error}</span>
             </div>
@@ -848,7 +848,7 @@ export default function PublicBookingView() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-barber-accent hover:bg-barber-accent-hover disabled:bg-zinc-800 disabled:text-zinc-550 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 shadow-md shadow-barber-accent/15"
+            className="w-full bg-barber-accent hover:bg-barber-accent-hover disabled:bg-zinc-800 disabled:text-zinc-400 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 shadow-md shadow-barber-accent/15"
           >
             {submitting ? (
               <>

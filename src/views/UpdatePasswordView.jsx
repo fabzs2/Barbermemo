@@ -56,14 +56,14 @@ export default function UpdatePasswordView() {
       <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] rounded-full bg-barber-accent/10 blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] rounded-full bg-barber-accent/5 blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-barber-card border border-barber-border/80 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6 fade-in z-10">
+      <div className="w-full max-w-sm bg-barber-card border border-barber-border/80 rounded-lg shadow-none overflow-hidden p-6 space-y-6 content-page fade-in z-10">
         <div className="flex flex-col items-center text-center space-y-2 select-none">
           <img src="/logo.svg" alt="BarberMemo Logo" className="w-14 h-14 object-contain rounded-xl shadow-lg" />
           <h1 className="text-xl font-bold tracking-tight text-zinc-100 font-sans">Redefinir Senha</h1>
         </div>
 
         {checkingSession ? (
-          <div className="text-center text-xs text-zinc-500">Verificando link...</div>
+          <div className="text-center text-xs text-zinc-400">Verificando link...</div>
         ) : !hasRecoverySession ? (
           <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-lg flex items-start gap-2 text-red-400 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -84,14 +84,14 @@ export default function UpdatePasswordView() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">Nova Senha</label>
+              <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">Nova Senha</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" />
                 <input
                   type="password"
                   required
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
+                  className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-400"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   disabled={isSaving}
@@ -100,14 +100,14 @@ export default function UpdatePasswordView() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">Confirmar Nova Senha</label>
+              <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">Confirmar Nova Senha</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" />
                 <input
                   type="password"
                   required
                   placeholder="Repita a senha"
-                  className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
+                  className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-400"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
                   disabled={isSaving}

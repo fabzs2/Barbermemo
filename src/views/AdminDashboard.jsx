@@ -190,9 +190,9 @@ export default function AdminDashboard() {
           <img src="/logo.svg" alt="Logo" className="w-8 h-8 object-contain rounded-lg" />
           <div>
             <h1 className="text-base font-extrabold tracking-tight flex items-center gap-1.5 font-sans">
-              BarberMemo <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] tracking-widest font-black uppercase px-2 py-0.5 rounded">SaaS ADMIN</span>
+              BarberMemo <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs tracking-widest font-black uppercase px-2 py-0.5 rounded">SaaS ADMIN</span>
             </h1>
-            <p className="text-[10px] text-zinc-400">Painel Central de Gerenciamento de Barbeiros</p>
+            <p className="text-xs text-zinc-400">Painel Central de Gerenciamento de Barbeiros</p>
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="hidden md:block pt-4 border-t border-barber-border/30 text-[10px] text-zinc-500 space-y-1.5 px-2 select-none">
+          <div className="hidden md:block pt-4 border-t border-barber-border/30 text-xs text-zinc-400 space-y-1.5 px-2 select-none">
             <p>BarberMemo SaaS v1.2</p>
             <p>Segurança: Isolamento Relacional por Barbeiro active.</p>
           </div>
@@ -242,12 +242,12 @@ export default function AdminDashboard() {
 
           {/* VIEW: BARBER LIST & REGISTER */}
           {adminTab === 'barbeiros' && (
-            <div className="space-y-6 fade-in max-w-4xl">
+            <div className="space-y-6 content-page fade-in max-w-4xl">
 
               <div className="flex justify-between items-center gap-4 flex-wrap">
                 <div>
                   <h2 className="text-lg font-bold text-zinc-100 font-sans">Barbeiros Cadastrados</h2>
-                  <p className="text-xs text-zinc-500">Crie, edite e remova credenciais de barbeiros.</p>
+                  <p className="text-xs text-zinc-400">Crie, edite e remova credenciais de barbeiros.</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -302,14 +302,14 @@ export default function AdminDashboard() {
 
               {/* FORM: ADD / EDIT BARBER */}
               {showAdminForm && (
-                <div className="bg-barber-card border border-barber-border rounded-2xl p-5 space-y-4 shadow-xl">
+                <div className="bg-barber-card border border-barber-border rounded-lg p-5 space-y-4 shadow-none">
                   <div className="flex justify-between items-center border-b border-barber-border/40 pb-3">
                     <span className="font-bold text-sm text-zinc-200 font-sans">
                       {editingBarberId ? 'Editar Dados do Barbeiro' : 'Cadastrar Novo Barbeiro no SaaS'}
                     </span>
                     <button
                       onClick={() => { setShowAdminForm(false); setEditingBarberId(null); }}
-                      className="text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer"
+                      className="text-zinc-400 hover:text-zinc-300 text-xs cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -324,9 +324,9 @@ export default function AdminDashboard() {
 
                   <form onSubmit={handleAdminSaveBarber} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">Nome Completo</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">Nome Completo</label>
                       <div className="relative">
-                        <User className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                        <User className="w-4 h-4 text-zinc-400 absolute left-3 top-3" />
                         <input
                           type="text" required placeholder="Ex: Lucas Mendes"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
@@ -336,9 +336,9 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">Nome da Barbearia</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">Nome da Barbearia</label>
                       <div className="relative">
-                        <Store className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                        <Store className="w-4 h-4 text-zinc-400 absolute left-3 top-3" />
                         <input
                           type="text" required placeholder="Ex: Barbearia da Esquina"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
@@ -348,9 +348,9 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">E-mail de Login</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">E-mail de Login</label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                        <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-3" />
                         <input
                           type="email" required placeholder="Ex: lucas@barber.com"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
@@ -360,9 +360,9 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">Senha de Acesso</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">Senha de Acesso</label>
                       <div className="relative">
-                        <LockKeyhole className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                        <LockKeyhole className="w-4 h-4 text-zinc-400 absolute left-3 top-3" />
                         <input
                           type="text" required placeholder="Senha provisória"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
@@ -372,9 +372,9 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase block font-sans">CPF/CNPJ</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase block font-sans">CPF/CNPJ</label>
                       <div className="relative">
-                        <IdCard className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+                        <IdCard className="w-4 h-4 text-zinc-400 absolute left-3 top-3" />
                         <input
                           type="text" required placeholder="Ex: 123.456.789-00"
                           className="w-full bg-barber-dark border border-barber-border rounded-xl py-2.5 pl-9 pr-3 text-xs text-barber-text-primary"
@@ -405,11 +405,11 @@ export default function AdminDashboard() {
               )}
 
               {/* TABLE LIST OF BARBERS */}
-              <div className="bg-barber-card border border-barber-border rounded-2xl overflow-hidden shadow-lg">
+              <div className="bg-barber-card border border-barber-border rounded-lg overflow-hidden shadow-lg">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-zinc-950/80 border-b border-barber-border/80 text-[10px] text-zinc-450 uppercase font-bold tracking-wider select-none">
+                      <tr className="bg-zinc-950/80 border-b border-barber-border/80 text-xs text-zinc-450 uppercase font-bold tracking-wider select-none">
                         <th className="py-3.5 px-4 font-sans">Barbeiro</th>
                         <th className="py-3.5 px-4 font-sans">Barbearia</th>
                         <th className="py-3.5 px-4 font-sans">E-mail de Acesso</th>
@@ -424,15 +424,15 @@ export default function AdminDashboard() {
                           <td className="py-4 px-4 font-semibold text-zinc-200 font-sans">{b.nome}</td>
                           <td className="py-4 px-4 text-zinc-400 font-sans">{b.barbeariaName}</td>
                           <td className="py-4 px-4 text-zinc-455 select-all font-mono">{b.email}</td>
-                          <td className="py-4 px-4 text-zinc-500 font-mono">{b.senha}</td>
+                          <td className="py-4 px-4 text-zinc-400 font-mono">{b.senha}</td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
                               {b.asaasCustomerId ? (
-                                <span className="flex items-center gap-1 text-emerald-500 text-[10px] font-bold">
+                                <span className="flex items-center gap-1 text-emerald-500 text-xs font-bold">
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Sincronizado
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1 text-zinc-500 text-[10px] font-bold">
+                                <span className="flex items-center gap-1 text-zinc-400 text-xs font-bold">
                                   <XCircle className="w-3.5 h-3.5" /> Não sincronizado
                                 </span>
                               )}
@@ -478,7 +478,7 @@ export default function AdminDashboard() {
                       ))}
                       {barbeirosList.length === 0 && !isDataLoading && (
                         <tr>
-                          <td colSpan="6" className="py-8 text-center text-zinc-550 font-sans">
+                          <td colSpan="6" className="py-8 text-center text-zinc-400 font-sans">
                             Nenhum barbeiro cadastrado no sistema.
                           </td>
                         </tr>
@@ -493,63 +493,63 @@ export default function AdminDashboard() {
 
           {/* VIEW: GLOBAL METRICS */}
           {adminTab === 'metrics' && (
-            <div className="space-y-6 fade-in max-w-4xl">
+            <div className="space-y-6 content-page fade-in max-w-4xl">
               <div>
                 <h2 className="text-lg font-bold text-zinc-100 font-sans">Visão Geral da Plataforma</h2>
-                <p className="text-xs text-zinc-500">Métricas consolidadas de todos os tenants cadastrados.</p>
+                <p className="text-xs text-zinc-400">Métricas consolidadas de todos os tenants cadastrados.</p>
               </div>
 
               {/* Global Metrics Cards Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-barber-card border border-barber-border rounded-2xl p-5 flex items-center gap-4">
+                <div className="bg-barber-card border border-barber-border rounded-lg p-5 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-barber-accent/10 border border-barber-accent/20 flex items-center justify-center text-barber-accent">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-555 block uppercase font-bold tracking-wider font-sans">Barbeiros Ativos</span>
+                    <span className="text-xs text-zinc-400 block uppercase font-bold tracking-wider font-sans">Barbeiros Ativos</span>
                     <span className="text-2xl font-black text-zinc-100">{adminGlobalStats.totalBarbeiros}</span>
                   </div>
                 </div>
 
-                <div className="bg-barber-card border border-barber-border rounded-2xl p-5 flex items-center gap-4">
+                <div className="bg-barber-card border border-barber-border rounded-lg p-5 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
                     <UserCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-555 block uppercase font-bold tracking-wider font-sans">Clientes Totais</span>
+                    <span className="text-xs text-zinc-400 block uppercase font-bold tracking-wider font-sans">Clientes Totais</span>
                     <span className="text-2xl font-black text-zinc-100">{adminGlobalStats.totalClientes}</span>
                   </div>
                 </div>
 
-                <div className="bg-barber-card border border-barber-border rounded-2xl p-5 flex items-center gap-4">
+                <div className="bg-barber-card border border-barber-border rounded-lg p-5 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-455">
                     <Scissors className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-555 block uppercase font-bold tracking-wider font-sans">Cortes Registrados</span>
+                    <span className="text-xs text-zinc-400 block uppercase font-bold tracking-wider font-sans">Cortes Registrados</span>
                     <span className="text-2xl font-black text-zinc-100">{adminGlobalStats.totalAtendimentos}</span>
                   </div>
                 </div>
 
-                <div className="bg-barber-card border border-barber-border rounded-2xl p-5 flex items-center gap-4">
+                <div className="bg-barber-card border border-barber-border rounded-lg p-5 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                     <Calendar className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-zinc-555 block uppercase font-bold tracking-wider font-sans">Agendamentos Marcados</span>
+                    <span className="text-xs text-zinc-400 block uppercase font-bold tracking-wider font-sans">Agendamentos Marcados</span>
                     <span className="text-2xl font-black text-zinc-100">{adminGlobalStats.totalAgendamentos}</span>
                   </div>
                 </div>
               </div>
 
               {/* System Diagnostics Info */}
-              <div className="bg-barber-card border border-barber-border rounded-2xl p-5 space-y-3">
+              <div className="bg-barber-card border border-barber-border rounded-lg p-5 space-y-3">
                 <div className="flex items-center gap-1.5 text-zinc-400 select-none">
                   <ShieldAlert className="w-4 h-4 text-barber-accent" />
                   <span className="text-xs font-bold uppercase tracking-wider font-sans">Diagnóstico de Armazenamento</span>
                 </div>
                 <div className="h-[1px] bg-barber-border/50"></div>
-                <p className="text-xs text-zinc-500 leading-relaxed font-sans">
+                <p className="text-xs text-zinc-400 leading-relaxed font-sans">
                   Os dados do BarberMemo estão salvos localmente na partição <code className="bg-zinc-950 text-zinc-400 px-1 py-0.5 rounded font-mono select-all">localStorage</code> do seu navegador. O limite típico por domínio é de 5MB. Fotos de corte são comprimidas pelo frontend para cerca de 120KB cada, permitindo salvar centenas de fichas de forma segura sem estourar a cota de memória local.
                 </p>
               </div>

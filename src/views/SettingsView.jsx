@@ -35,10 +35,21 @@ export default function SettingsView() {
   const [statusFila, setStatusFila] = useState(currentUser?.statusFila || 'disponivel');
   const [horaInicio, setHoraInicio] = useState(currentUser?.horaInicio || '08:00');
   const [horaFim, setHoraFim] = useState(currentUser?.horaFim || '20:00');
-  const [servicos, setServicos] = useState(() => currentUser?.servicosConfig || []);
+  const [servicesLoadError] = useState(() => {
+    const raw = currentUser?.servicosConfig;
+    if (raw == null || Array.isArray(raw)) return false;
+    try { return !Array.isArray(JSON.parse(raw)); } catch { return true; }
+  });
+  const [servicos, setServicos] = useState(() => {
+    const raw = currentUser?.servicosConfig;
+    if (raw == null) return [];
+    if (Array.isArray(raw)) return raw;
+    try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; }
+    catch { return []; }
+  });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(servicesLoadError ? 'Não foi possível ler os serviços cadastrados. O salvamento está bloqueado para preservar seus dados.' : '');
   const [success, setSuccess] = useState(false);
 
   // Password change state
@@ -164,6 +175,7 @@ export default function SettingsView() {
     setSuccess(false);
 
     try {
+      if (servicesLoadError) throw new Error('Formato de serviços inválido');
       const updatedUser = await db.updateBarberConfig(currentUser.id, {
         telefone: cleanPhone,
         horaInicio,
@@ -188,7 +200,7 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col font-sans fade-in max-w-2xl mx-auto">
+    <div className="p-5 md:p-10 min-h-full flex flex-col font-sans content-page fade-in max-w-4xl mx-auto w-full">
       
       {/* Header control */}
       <div className="flex justify-between items-center border-b border-barber-border/50 pb-4 mb-5 shrink-0 select-none">
@@ -197,11 +209,11 @@ export default function SettingsView() {
             <Settings className="w-5 h-5 text-barber-accent" />
             Configurações do Perfil
           </h2>
-          <p className="text-xs text-zinc-550 mt-0.5">Customize sua agenda e serviços do link público</p>
+          <p className="text-xs text-zinc-400 mt-0.5">Customize sua agenda e serviços do link público</p>
         </div>
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-zinc-550 hover:text-zinc-350 text-xs flex items-center gap-1 cursor-pointer"
+          className="text-zinc-400 hover:text-zinc-350 text-xs flex items-center gap-1 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Voltar
@@ -219,12 +231,12 @@ export default function SettingsView() {
               <Settings className="w-4 h-4" />
               <h3 className="text-xs font-bold uppercase tracking-wider">WhatsApp para Contato</h3>
             </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed select-none">
+            <p className="text-xs text-zinc-400 leading-relaxed select-none">
               Insira seu número de WhatsApp. O cliente será redirecionado para este número ao clicar em "Enviar Aviso por WhatsApp" no fim do agendamento público.
             </p>
 
             <div className="space-y-1.5">
-              <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Seu WhatsApp</label>
+              <label className="text-xs font-semibold text-zinc-400 font-sans block">Seu WhatsApp</label>
               <input
                 type="text"
                 placeholder="Ex: (93) 99199-0984"
@@ -241,13 +253,13 @@ export default function SettingsView() {
               <Settings className="w-4 h-4" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Modelo de Atendimento</h3>
             </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed select-none">
+            <p className="text-xs text-zinc-400 leading-relaxed select-none">
               Escolha se prefere trabalhar por hora marcada (Agenda) ou por ordem de chegada virtual (Fila de Espera em Tempo Real).
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Modelo</label>
+                <label className="text-xs font-semibold text-zinc-400 font-sans block">Modelo</label>
                 <select
                   value={modeloAtendimento}
                   onChange={(e) => setModeloAtendimento(e.target.value)}
@@ -260,7 +272,7 @@ export default function SettingsView() {
 
               {modeloAtendimento === 'fila' && (
                 <div className="space-y-1.5">
-                  <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Status da Fila</label>
+                  <label className="text-xs font-semibold text-zinc-400 font-sans block">Status da Fila</label>
                   <select
                     value={statusFila}
                     onChange={(e) => setStatusFila(e.target.value)}
@@ -282,13 +294,13 @@ export default function SettingsView() {
               <Clock className="w-4 h-4" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Horário de Agendamento</h3>
             </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed select-none">
+            <p className="text-xs text-zinc-400 leading-relaxed select-none">
               Defina o período de atendimento diário. Os slots do formulário público de agendamento serão gerados dentro desse intervalo.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Início da Agenda</label>
+                <label className="text-xs font-semibold text-zinc-400 font-sans block">Início da Agenda</label>
                 <select
                   value={horaInicio}
                   onChange={(e) => setHoraInicio(e.target.value)}
@@ -301,7 +313,7 @@ export default function SettingsView() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Término da Agenda</label>
+                <label className="text-xs font-semibold text-zinc-400 font-sans block">Término da Agenda</label>
                 <select
                   value={horaFim}
                   onChange={(e) => setHoraFim(e.target.value)}
@@ -327,7 +339,7 @@ export default function SettingsView() {
                 <button
                   type="button"
                   onClick={handleStartAdding}
-                  className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-3 py-1.5 rounded-lg text-xs font-bold uppercase flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Novo Serviço
@@ -335,20 +347,20 @@ export default function SettingsView() {
               )}
             </div>
             
-            <p className="text-[11px] text-zinc-500 leading-relaxed select-none">
+            <p className="text-xs text-zinc-400 leading-relaxed select-none">
               Crie os tipos de cortes e serviços que você faz, definindo o tempo estimado e o valor cobrado.
             </p>
 
             {/* Inline Editor Form */}
             {editingIdx !== null && (
-              <div className="bg-zinc-950/40 border border-barber-accent/30 rounded-xl p-4 space-y-4 fade-in">
-                <h4 className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest block">
+              <div className="bg-zinc-950/40 border border-barber-accent/30 rounded-xl p-4 space-y-4 content-page fade-in">
+                <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-widest block">
                   {editingIdx === 'new' ? 'Adicionar Novo Serviço' : 'Editar Serviço'}
                 </h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-zinc-500 font-semibold font-sans block">Nome do Serviço</label>
+                    <label className="text-xs text-zinc-400 font-semibold font-sans block">Nome do Serviço</label>
                     <input
                       type="text"
                       placeholder="Ex: Corte Degradê"
@@ -359,7 +371,7 @@ export default function SettingsView() {
                   </div>
                   
                   <div className="space-y-1">
-                    <label className="text-[10px] text-zinc-500 font-semibold font-sans block">Duração (minutos)</label>
+                    <label className="text-xs text-zinc-400 font-semibold font-sans block">Duração (minutos)</label>
                     <input
                       type="number"
                       placeholder="Ex: 40"
@@ -370,7 +382,7 @@ export default function SettingsView() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] text-zinc-500 font-semibold font-sans block">Preço (R$)</label>
+                    <label className="text-xs text-zinc-400 font-semibold font-sans block">Preço (R$)</label>
                     <input
                       type="text"
                       placeholder="Ex: R$ 40,00"
@@ -385,14 +397,14 @@ export default function SettingsView() {
                   <button
                     type="button"
                     onClick={() => setEditingIdx(null)}
-                    className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer"
+                    className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveService}
-                    className="bg-barber-accent hover:bg-barber-accent-hover text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
+                    className="bg-barber-accent hover:bg-barber-accent-hover text-white px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Salvar Serviço
@@ -407,7 +419,7 @@ export default function SettingsView() {
                 <div key={idx} className="p-3.5 flex justify-between items-center hover:bg-zinc-900/10 transition-colors">
                   <div className="min-w-0 flex-1">
                     <span className="font-bold text-xs block text-zinc-200 truncate">{s.name}</span>
-                    <span className="text-[10px] text-zinc-500 block mt-0.5 font-sans">
+                    <span className="text-xs text-zinc-400 block mt-0.5 font-sans">
                       Duração: <strong className="text-zinc-400 font-medium">{s.duration} min</strong>
                     </span>
                   </div>
@@ -440,7 +452,7 @@ export default function SettingsView() {
               ))}
               
               {servicos.length === 0 && (
-                <div className="p-6 text-center text-zinc-550 select-none text-xs">
+                <div className="p-6 text-center text-zinc-400 select-none text-xs">
                   Nenhum serviço configurado. Clique em "Novo Serviço" para começar.
                 </div>
               )}
@@ -450,14 +462,14 @@ export default function SettingsView() {
 
           {/* Feedback Messages */}
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-xs rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
               <Info className="w-3.5 h-3.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
               <Check className="w-3.5 h-3.5 shrink-0" />
               <span>Configurações salvas e perfil atualizado com sucesso! Redirecionando...</span>
             </div>
@@ -477,7 +489,7 @@ export default function SettingsView() {
             <button
               type="submit"
               disabled={saving || editingIdx !== null}
-              className="flex-1 bg-barber-accent hover:bg-barber-accent-hover text-white py-3 rounded-xl text-xs font-bold disabled:bg-zinc-800 disabled:text-zinc-550 transition-all flex items-center justify-center gap-2 cursor-pointer font-sans shadow-md shadow-barber-accent/15"
+              className="flex-1 bg-barber-accent hover:bg-barber-accent-hover text-white py-3 rounded-xl text-xs font-bold disabled:bg-zinc-800 disabled:text-zinc-400 transition-all flex items-center justify-center gap-2 cursor-pointer font-sans shadow-md shadow-barber-accent/15"
             >
               {saving ? (
                 <>
@@ -504,7 +516,7 @@ export default function SettingsView() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Nova Senha</label>
+              <label className="text-xs font-semibold text-zinc-400 font-sans block">Nova Senha</label>
               <input
                 type="password"
                 placeholder="Mínimo 6 caracteres"
@@ -514,7 +526,7 @@ export default function SettingsView() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10.5px] font-semibold text-zinc-400 font-sans block">Confirmar Nova Senha</label>
+              <label className="text-xs font-semibold text-zinc-400 font-sans block">Confirmar Nova Senha</label>
               <input
                 type="password"
                 placeholder="Repita a senha"
@@ -526,14 +538,14 @@ export default function SettingsView() {
           </div>
 
           {passwordError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+            <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-500 text-xs rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
               <Info className="w-3.5 h-3.5 shrink-0" />
               <span>{passwordError}</span>
             </div>
           )}
 
           {passwordSuccess && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs rounded-lg font-semibold flex items-center gap-1.5 select-none font-sans">
               <Check className="w-3.5 h-3.5 shrink-0" />
               <span>Senha alterada com sucesso!</span>
             </div>
@@ -542,7 +554,7 @@ export default function SettingsView() {
           <button
             type="submit"
             disabled={changingPassword}
-            className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-4 py-2 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            className="bg-zinc-800 hover:bg-zinc-750 text-barber-accent-light border border-zinc-700/80 px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <Lock className="w-3.5 h-3.5" />
             {changingPassword ? 'Salvando...' : 'Salvar Nova Senha'}

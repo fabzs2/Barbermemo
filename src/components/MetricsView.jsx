@@ -299,7 +299,7 @@ export default function MetricsView() {
     return (
       <div className="flex-1 flex items-center justify-center bg-barber-dark py-20 flex-col space-y-4">
         <div className="w-10 h-10 border-4 border-barber-accent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-zinc-500 text-xs font-semibold">Carregando métricas financeiras...</span>
+        <span className="text-zinc-400 text-xs font-semibold">Carregando métricas financeiras...</span>
       </div>
     );
   }
@@ -310,7 +310,7 @@ export default function MetricsView() {
     : [...metrics.clientesSumidos60, ...metrics.clientesSumidos45];
 
   return (
-    <div className="flex-1 p-6 space-y-6 bg-barber-dark max-w-4xl mx-auto overflow-y-auto no-scrollbar font-sans text-barber-text-primary fade-in pb-20">
+    <div className="flex-1 p-6 space-y-6 bg-barber-dark max-w-4xl mx-auto overflow-y-auto no-scrollbar font-sans text-barber-text-primary content-page fade-in pb-20">
 
       {/* Header */}
       <div className="flex justify-between items-center flex-wrap gap-4 border-b border-barber-border/30 pb-4">
@@ -319,7 +319,7 @@ export default function MetricsView() {
             <BarChart3 className="w-5 h-5 text-barber-accent" />
             Desempenho e Insights Financeiros
           </h2>
-          <p className="text-xs text-zinc-500">Métricas financeiras detalhadas e estatísticas de retenção de clientes</p>
+          <p className="text-xs text-zinc-400">Métricas financeiras detalhadas e estatísticas de retenção de clientes</p>
         </div>
 
         <button
@@ -333,18 +333,18 @@ export default function MetricsView() {
 
       {/* PRICE SETTINGS PANEL (IF OPEN) */}
       {showPriceSettings && (
-        <div className="bg-barber-card border border-barber-accent/30 rounded-2xl p-5 space-y-4 shadow-xl fade-in">
+        <div className="bg-barber-card border border-barber-accent/30 rounded-lg p-5 space-y-4 shadow-none content-page fade-in">
           <div className="flex justify-between items-center border-b border-barber-border/40 pb-2.5">
             <span className="font-bold text-sm text-zinc-200">Tabela de Preços (Serviços)</span>
-            <span className="text-[10px] text-zinc-500">Os valores abaixo estimam o seu faturamento</span>
+            <span className="text-xs text-zinc-400">Os valores abaixo estimam o seu faturamento</span>
           </div>
 
           <form onSubmit={handleSavePrices} className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {Object.keys(prices).map(key => (
               <div key={key} className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase block">{key}</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase block">{key}</label>
                 <div className="relative">
-                  <span className="text-[11px] text-zinc-500 absolute left-2.5 top-2">R$</span>
+                  <span className="text-xs text-zinc-400 absolute left-2.5 top-2">R$</span>
                   <input
                     type="number"
                     min="0"
@@ -383,44 +383,44 @@ export default function MetricsView() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 
         {/* Faturamento Mensal */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Mensal Estimado</span>
+            <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Mensal Estimado</span>
             <DollarSign className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-zinc-100 block">R$ {metrics.faturamentoMes.toFixed(0)}</span>
-            <span className="text-[10px] text-zinc-500 mt-1 block">Mês atual consolidado</span>
+            <span className="text-xs text-zinc-400 mt-1 block">Mês atual consolidado</span>
           </div>
           <div className="absolute right-0 bottom-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl group-hover:bg-emerald-500/10 transition-all"></div>
         </div>
 
         {/* Faturamento Diário */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Hoje Estimado</span>
+            <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Hoje Estimado</span>
             <CalendarDays className="w-4 h-4 text-barber-accent" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-zinc-100 block font-sans">R$ {metrics.faturamentoDia.toFixed(0)}</span>
-            <span className="text-[10px] text-zinc-500 mt-1 block">Ganhos do dia de hoje</span>
+            <span className="text-xs text-zinc-400 mt-1 block">Ganhos do dia de hoje</span>
           </div>
           <div className="absolute right-0 bottom-0 w-16 h-16 bg-barber-accent/5 rounded-full blur-xl group-hover:bg-barber-accent/10 transition-all"></div>
         </div>
 
         {/* Ticket Médio */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Ticket Médio</span>
+            <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Ticket Médio</span>
             <TrendingUp className="w-4 h-4 text-sky-400" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-zinc-100 block">R$ {metrics.ticketMedio.toFixed(1)}</span>
-            <span className="text-[10px] text-zinc-500 mt-1 block flex items-center gap-1">
+            <span className="text-xs text-zinc-400 mt-1 block flex items-center gap-1">
               Média por atendimento
               <div className="group/info relative inline-block">
                 <Info className="w-3 h-3 text-zinc-600 hover:text-zinc-400 cursor-pointer" />
-                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-32 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[8px] p-1.5 rounded shadow-lg opacity-0 group-hover/info:opacity-100 transition-opacity z-50 normal-case leading-normal font-medium text-center">
+                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-32 bg-zinc-900 border border-zinc-700 text-zinc-400 text-xs p-1.5 rounded shadow-lg opacity-0 group-hover/info:opacity-100 transition-opacity z-50 normal-case leading-normal font-medium text-center">
                   Faturamento total dividido pelo total de visitas únicas.
                 </span>
               </div>
@@ -430,18 +430,18 @@ export default function MetricsView() {
         </div>
 
         {/* Taxa de Retorno */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-4 flex flex-col justify-between shadow-md relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block">Retenção (30d)</span>
+            <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Retenção (30d)</span>
             <Award className="w-4 h-4 text-amber-500" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-black text-zinc-100 block">{metrics.taxaRetorno.toFixed(0)}%</span>
-            <span className="text-[10px] text-zinc-500 mt-1 block flex items-center gap-1">
+            <span className="text-xs text-zinc-400 mt-1 block flex items-center gap-1">
               Voltam em até 30 dias
               <div className="group/info2 relative inline-block">
                 <Info className="w-3 h-3 text-zinc-600 hover:text-zinc-400 cursor-pointer" />
-                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-36 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[8px] p-1.5 rounded shadow-lg opacity-0 group-hover/info2:opacity-100 transition-opacity z-50 normal-case leading-normal font-medium text-center">
+                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-36 bg-zinc-900 border border-zinc-700 text-zinc-400 text-xs p-1.5 rounded shadow-lg opacity-0 group-hover/info2:opacity-100 transition-opacity z-50 normal-case leading-normal font-medium text-center">
                   Percentual de clientes cadastrados que retornaram para cortar em até 30 dias após a visita anterior.
                 </span>
               </div>
@@ -456,10 +456,10 @@ export default function MetricsView() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Service Type Breakdown */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-5 space-y-4">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-5 space-y-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Distribuição de Receita por Serviço</h3>
-            <p className="text-[10px] text-zinc-500">Divisão do faturamento total por categoria de serviço prestado</p>
+            <p className="text-xs text-zinc-400">Divisão do faturamento total por categoria de serviço prestado</p>
           </div>
 
           <div className="space-y-3 pt-2">
@@ -473,7 +473,7 @@ export default function MetricsView() {
                 <div key={key} className="space-y-1 text-xs">
                   <div className="flex justify-between items-center text-zinc-300">
                     <span className="font-semibold">{key}</span>
-                    <span className="font-mono text-zinc-400 font-bold">R$ {spent.toFixed(0)} <span className="text-[10px] font-normal text-zinc-650">({pct.toFixed(0)}%)</span></span>
+                    <span className="font-mono text-zinc-400 font-bold">R$ {spent.toFixed(0)} <span className="text-xs font-normal text-zinc-400">({pct.toFixed(0)}%)</span></span>
                   </div>
                   <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden border border-zinc-900/30">
                     <div
@@ -492,13 +492,13 @@ export default function MetricsView() {
         </div>
 
         {/* Top VIP Clients Ranking */}
-        <div className="bg-barber-card border border-barber-border rounded-2xl p-5 space-y-4">
+        <div className="bg-barber-card border border-barber-border rounded-lg p-5 space-y-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1">
               <Award className="w-4 h-4 text-barber-accent" />
               Ranking de Clientes VIP
             </h3>
-            <p className="text-[10px] text-zinc-500">Os 5 clientes que mais trouxeram faturamento para você</p>
+            <p className="text-xs text-zinc-400">Os 5 clientes que mais trouxeram faturamento para você</p>
           </div>
 
           <div className="divide-y divide-barber-border/30">
@@ -507,7 +507,7 @@ export default function MetricsView() {
               return (
                 <div key={item.client.id} className="py-2.5 flex items-center justify-between text-xs first:pt-0 last:pb-0">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${idx === 0
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs ${idx === 0
                         ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                         : 'bg-zinc-800 text-zinc-400'
                       }`}>
@@ -518,14 +518,14 @@ export default function MetricsView() {
 
                   <div className="text-right shrink-0">
                     <span className="font-bold text-zinc-100 block">R$ {item.spent.toFixed(0)}</span>
-                    <span className="text-[9px] text-zinc-500 block">{item.visitsCount} visitas • R$ {med.toFixed(0)} méd.</span>
+                    <span className="text-xs text-zinc-400 block">{item.visitsCount} visitas • R$ {med.toFixed(0)} méd.</span>
                   </div>
                 </div>
               );
             })}
 
             {metrics.rankingClientes.length === 0 && (
-              <div className="py-8 text-center text-zinc-650 text-xs">Ainda não há clientes com faturamento calculado.</div>
+              <div className="py-8 text-center text-zinc-400 text-xs">Ainda não há clientes com faturamento calculado.</div>
             )}
           </div>
         </div>
@@ -533,14 +533,14 @@ export default function MetricsView() {
       </div>
 
       {/* BOTTOM SECTION: MISSING CLIENTS (CLIENTES SUMIDOS) */}
-      <div className="bg-barber-card border border-barber-border rounded-2xl p-5 space-y-4">
+      <div className="bg-barber-card border border-barber-border rounded-lg p-5 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               Alerta de Clientes Sumidos (Pós-Venda)
             </h3>
-            <p className="text-[10px] text-zinc-500">Clientes que realizaram cortes anteriormente, mas não voltam há algum tempo</p>
+            <p className="text-xs text-zinc-400">Clientes que realizaram cortes anteriormente, mas não voltam há algum tempo</p>
           </div>
 
           {/* Filters */}
@@ -575,21 +575,21 @@ export default function MetricsView() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-zinc-200 text-xs">{item.client.nome}</span>
-                    <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded uppercase ${isCritical
+                    <span className={`text-xs font-bold px-1.5 py-0.2 rounded uppercase ${isCritical
                         ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                         : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       }`}>
                       Ausente {item.daysPassed}d
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 block truncate mt-1">
+                  <p className="text-xs text-zinc-400 block truncate mt-1">
                     Último corte: <span className="text-zinc-400 font-medium">{item.lastCutDetails}</span>
                   </p>
                 </div>
 
                 <button
                   onClick={() => triggerWhatsAppReminder(item)}
-                  className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-1.5 px-3 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all shadow-md self-end sm:self-center shrink-0"
+                  className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-1.5 px-3 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-md self-end sm:self-center shrink-0"
                 >
                   <Phone className="w-3 h-3 fill-white text-emerald-600" />
                   Resgatar Cliente
@@ -599,7 +599,7 @@ export default function MetricsView() {
           })}
 
           {displaySumidos.length === 0 && (
-            <div className="py-10 text-center bg-zinc-950/15 border border-barber-border/30 rounded-2xl text-zinc-500 text-xs">
+            <div className="py-10 text-center bg-zinc-950/15 border border-barber-border/30 rounded-lg text-zinc-400 text-xs">
               <Users className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
               Nenhum cliente ausente detectado para este filtro. Parabéns pela retenção! 🎉
             </div>

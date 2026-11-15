@@ -3,7 +3,7 @@ import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { db } from '../db';
 import Lightbox from '../components/Lightbox';
 import {
-  Phone, Edit2, Trash2, Calendar, Scissors, PhoneCall, ArrowLeft
+  Phone, Edit2, Trash2, Calendar, Scissors, PhoneCall, ArrowLeft, AlertCircle
 } from 'lucide-react';
 
 export default function ClientProfileView() {
@@ -84,15 +84,15 @@ export default function ClientProfileView() {
     return (
       <div className="p-8 flex items-center justify-center flex-col space-y-4">
         <div className="w-8 h-8 border-3 border-barber-accent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-zinc-550 text-xs font-semibold">Buscando ficha do cliente...</span>
+        <span className="text-zinc-400 text-xs font-semibold">Buscando ficha do cliente...</span>
       </div>
     );
   }
 
   if (!activeClient) {
     return (
-      <div className="p-8 text-center text-zinc-500 space-y-3 max-w-sm mx-auto">
-        <AlertCircle className="w-10 h-10 mx-auto text-zinc-650" />
+      <div className="p-8 text-center text-zinc-400 space-y-3 max-w-sm mx-auto">
+        <AlertCircle className="w-10 h-10 mx-auto text-zinc-400" />
         <h3 className="text-zinc-300 font-bold">Cliente não encontrado</h3>
         <p className="text-xs">A ficha técnica procurada pode ter sido removida ou não pertence a esta conta.</p>
         <button onClick={() => navigate('/dashboard')} className="text-xs bg-zinc-800 text-zinc-300 py-1.5 px-3 rounded-lg border border-zinc-700 font-bold">
@@ -103,7 +103,7 @@ export default function ClientProfileView() {
   }
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col font-sans fade-in">
+    <div className="p-5 md:p-10 min-h-full flex flex-col font-sans content-page fade-in">
       
       {/* Mobile Back navigation */}
       <div className="md:hidden flex items-center gap-2 mb-4">
@@ -118,11 +118,11 @@ export default function ClientProfileView() {
         <div>
           <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 font-sans flex-wrap">
             {activeClient.nome}
-            <span className="text-[9px] font-normal bg-zinc-855 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700">
+            <span className="text-xs font-normal bg-zinc-855 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700">
               CRM ID: {activeClient.id}
             </span>
           </h2>
-          <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1 font-sans">
+          <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1 font-sans">
             <Phone className="w-3.5 h-3.5" />
             {activeClient.telefone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
           </p>
@@ -150,11 +150,11 @@ export default function ClientProfileView() {
         {/* Left pane: Profile metadata card */}
         <div className="md:col-span-4 space-y-4 h-fit md:sticky md:top-0">
           <div className="bg-barber-card border border-barber-border rounded-xl p-4 space-y-4 shadow-sm">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block select-none">Metadados e Alertas</span>
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block select-none">Metadados e Alertas</span>
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between">
-                <span className="text-zinc-500 font-sans">Prazo de Retorno</span>
+                <span className="text-zinc-400 font-sans">Prazo de Retorno</span>
                 <span className="font-semibold text-zinc-300 font-sans">{activeClient.intervaloDiasRetorno} dias</span>
               </div>
 
@@ -168,11 +168,11 @@ export default function ClientProfileView() {
                   return (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-zinc-550 font-sans">Última Visita</span>
+                        <span className="text-zinc-400 font-sans">Última Visita</span>
                         <span className="font-semibold text-zinc-300 font-sans">{formatDate(last.data)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-550 font-sans">Intervalo Decorrido</span>
+                        <span className="text-zinc-400 font-sans">Intervalo Decorrido</span>
                         <span className={`font-semibold font-sans ${isOverdue ? 'text-amber-500' : 'text-emerald-500'}`}>
                           {elapsed === 0 ? 'Hoje' : `${elapsed} dias`}
                         </span>
@@ -181,7 +181,7 @@ export default function ClientProfileView() {
                   );
                 })()
               ) : (
-                <div className="text-amber-500 font-semibold text-[11px] font-sans">Nenhum histórico</div>
+                <div className="text-amber-500 font-semibold text-xs font-sans">Nenhum histórico</div>
               )}
             </div>
 
@@ -218,7 +218,7 @@ export default function ClientProfileView() {
 
         {/* Right pane: Timeline history logs */}
         <div className="md:col-span-8 space-y-4">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block px-1 select-none">Linha do Tempo</span>
+          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest block px-1 select-none">Linha do Tempo</span>
 
           {activeClient.atendimentos.length > 0 ? (
             <div className="relative border-l border-barber-border ml-2 pl-4 space-y-5">
@@ -231,10 +231,10 @@ export default function ClientProfileView() {
                   <div className="bg-barber-card border border-barber-border rounded-xl p-4 space-y-3 shadow-sm">
                     <div className="flex justify-between items-center text-xs select-none">
                       <span className="font-bold text-zinc-200 flex items-center gap-1 font-sans">
-                        <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                        <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                         {formatDate(item.data)}
                       </span>
-                      <span className="text-[9px] font-semibold text-zinc-400 bg-zinc-850 px-2 py-0.5 rounded">
+                      <span className="text-xs font-semibold text-zinc-400 bg-zinc-850 px-2 py-0.5 rounded">
                         {formatRelativeTime(item.data)}
                       </span>
                     </div>
@@ -242,25 +242,25 @@ export default function ClientProfileView() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                       {item.laterais && (
                         <div>
-                          <span className="text-zinc-550 block text-[9px] uppercase font-bold select-none font-sans">Laterais</span>
+                          <span className="text-zinc-400 block text-xs uppercase font-bold select-none font-sans">Laterais</span>
                           <span className="text-zinc-300 font-medium font-sans">{item.laterais}</span>
                         </div>
                       )}
                       {item.topo && (
                         <div>
-                          <span className="text-zinc-555 block text-[9px] uppercase font-bold select-none font-sans">Topo</span>
+                          <span className="text-zinc-400 block text-xs uppercase font-bold select-none font-sans">Topo</span>
                           <span className="text-zinc-300 font-medium font-sans">{item.topo}</span>
                         </div>
                       )}
                       {item.barba && (
                         <div>
-                          <span className="text-zinc-550 block text-[9px] uppercase font-bold select-none font-sans">Barba</span>
+                          <span className="text-zinc-400 block text-xs uppercase font-bold select-none font-sans">Barba</span>
                           <span className="text-zinc-300 font-medium font-sans">{item.barba}</span>
                         </div>
                       )}
                       {item.produtos && (
                         <div>
-                          <span className="text-zinc-550 block text-[9px] uppercase font-bold select-none font-sans">Produtos</span>
+                          <span className="text-zinc-400 block text-xs uppercase font-bold select-none font-sans">Produtos</span>
                           <span className="text-zinc-300 font-medium font-sans">{item.produtos}</span>
                         </div>
                       )}
@@ -284,7 +284,7 @@ export default function ClientProfileView() {
               ))}
             </div>
           ) : (
-            <div className="bg-barber-card border border-barber-border rounded-xl p-8 text-center text-zinc-500 shadow-sm">
+            <div className="bg-barber-card border border-barber-border rounded-xl p-8 text-center text-zinc-400 shadow-sm">
               <Scissors className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
               <p className="text-xs">Nenhum corte registrado ainda.</p>
               <button

@@ -84,27 +84,27 @@ export default function NewAppointmentForm() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-xl mx-auto w-full space-y-6 fade-in font-sans">
+    <div className="p-5 md:p-10 max-w-2xl mx-auto w-full space-y-6 content-page fade-in font-sans">
       
       {/* Header */}
       <div className="flex justify-between items-center select-none">
         <h2 className="text-lg font-bold text-zinc-100 font-sans">Agendar Novo Horário</h2>
         <button
           onClick={() => navigate('/agendamentos')}
-          className="text-zinc-550 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer font-sans"
+          className="text-zinc-400 hover:text-zinc-300 text-xs flex items-center gap-1 cursor-pointer font-sans"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Cancelar
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-barber-card border border-barber-border rounded-2xl p-6 space-y-4 shadow-xl">
+      <form onSubmit={handleSubmit} className="bg-barber-card border border-barber-border rounded-lg p-6 space-y-4 shadow-none">
         
         {/* Client Search/Selector */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-zinc-400 font-sans">1. Selecionar Cliente</label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 text-zinc-500 w-3.5 h-3.5" />
+            <Search className="absolute left-2.5 top-2.5 text-zinc-400 w-3.5 h-3.5" />
             <input
               type="text"
               placeholder="Buscar entre meus clientes..."
@@ -139,14 +139,14 @@ export default function NewAppointmentForm() {
             
             {filteredClients.length === 0 && appFormSearch.trim() !== '' && (
               <div className="p-3 text-center bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-2 select-none">
-                <p className="text-[11px] text-amber-500 font-sans">Cliente não encontrado, deseja cadastrá-lo agora?</p>
+                <p className="text-xs text-amber-500 font-sans">Cliente não encontrado, deseja cadastrá-lo agora?</p>
                 <button
                   type="button"
                   disabled={saving}
                   onClick={() => {
                     navigate('/clientes/novo', { state: { fromAppointment: true } });
                   }}
-                  className="text-[9px] font-bold text-white bg-barber-accent hover:bg-barber-accent-hover py-1 px-3 rounded-lg cursor-pointer transition-all active:scale-95"
+                  className="text-xs font-bold text-white bg-barber-accent hover:bg-barber-accent-hover py-1 px-3 rounded-lg cursor-pointer transition-all active:scale-95"
                 >
                   Adicionar "{appFormSearch}"
                 </button>
@@ -200,7 +200,7 @@ export default function NewAppointmentForm() {
                 type="button"
                 disabled={saving}
                 onClick={() => handlePillClick(pill)}
-                className="bg-zinc-850 text-[9px] text-zinc-400 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 cursor-pointer font-sans transition-all"
+                className="bg-zinc-850 text-xs text-zinc-400 px-2 py-0.5 rounded border border-zinc-700 hover:bg-zinc-750 cursor-pointer font-sans transition-all"
               >
                 {pill}
               </button>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../db';
-import { Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle2, Scissors } from 'lucide-react';
 
 export default function LoginView() {
   const { currentUser, login, authError, setAuthError } = useAuth();
@@ -67,20 +67,13 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-barber-dark flex items-center justify-center font-sans px-4 py-8 relative overflow-hidden">
+    <div className="login-page">
       
-      {/* Decorative background lights */}
-      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] rounded-full bg-barber-accent/10 blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] rounded-full bg-barber-accent/5 blur-[100px] pointer-events-none"></div>
+      <aside className="login-story"><a className="login-wordmark" href="/login"><Scissors size={26} strokeWidth={1.5} />barbermemo</a><div><div className="barber-seal" aria-hidden="true"><Scissors size={42} strokeWidth={1} /></div><p className="eyebrow">Feito para quem vive do corte</p><h2>O detalhe faz<br />o cliente voltar.</h2><p>A agenda, a ficha do corte e a história de cada cliente. Tudo no seu lugar.</p><div className="story-rule" /><span>Menos improviso. Mais tempo na cadeira.</span></div><footer>Gestão para barbeiros independentes.</footer></aside>
+      <main className="login-form-area">
+      <div className="login-form-card space-y-6">
 
-      <div className="w-full max-w-sm bg-barber-card border border-barber-border/80 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-6 fade-in z-10">
-
-        {/* Logo / Branding */}
-        <div className="flex flex-col items-center text-center space-y-2 select-none">
-          <img src="/logo.svg" alt="BarberMemo Logo" className="w-14 h-14 object-contain rounded-xl shadow-lg" />
-          <h1 className="text-xl font-bold tracking-tight text-zinc-100 font-sans">BarberMemo</h1>
-          <p className="text-[11px] text-zinc-400">Ficha técnica e agenda individual para Barbeiros</p>
-        </div>
+        <div className="login-form-heading"><span className="mobile-wordmark"><Scissors size={25} strokeWidth={1.5} />barbermemo</span><p className="eyebrow">Seu espaço de trabalho</p><h1>{mode === 'login' ? 'Bom ter você de volta.' : 'Recupere seu acesso.'}</h1><p>{mode === 'login' ? 'Entre para acompanhar sua agenda e seus clientes.' : 'Vamos enviar as instruções para o seu e-mail.'}</p></div>
 
         {/* Errors Banner */}
         {authError && (
@@ -100,7 +93,7 @@ export default function LoginView() {
                 <input
                   type="email"
                   required
-                  placeholder="Ex: nome@gmail.com"
+                  placeholder="voce@exemplo.com" autoComplete="email" aria-label="E-mail"
                   className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +109,7 @@ export default function LoginView() {
                 <input
                   type="password"
                   required
-                  placeholder="Sua senha"
+                  placeholder="Sua senha" autoComplete="current-password" aria-label="Senha"
                   className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
@@ -137,7 +130,7 @@ export default function LoginView() {
               disabled={isSaving}
               className="w-full bg-barber-accent hover:bg-barber-accent-hover text-white py-3.5 rounded-xl font-bold text-xs shadow-lg uppercase tracking-wider transition-all disabled:opacity-50 active:scale-[0.98]"
             >
-              {isSaving ? 'Acessando...' : 'Acessar Minha Carteira'}
+              {isSaving ? 'Acessando...' : 'Entrar na minha conta'}
             </button>
           </form>
         ) : (
@@ -158,7 +151,7 @@ export default function LoginView() {
                     <input
                       type="email"
                       required
-                      placeholder="Ex: nome@gmail.com"
+                      placeholder="voce@exemplo.com" autoComplete="email" aria-label="E-mail"
                       className="w-full bg-barber-dark border border-barber-border rounded-xl py-3 pl-10 pr-4 text-xs text-barber-text-primary placeholder:text-zinc-650"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
@@ -186,6 +179,8 @@ export default function LoginView() {
         )}
 
       </div>
+      <p className="login-footnote">Seu próximo atendimento começa com organização.</p>
+      </main>
     </div>
   );
 }
