@@ -11,9 +11,10 @@ if(client) {
    functions:await q("select p.oid::regprocedure::text as signature,p.prosecdef as security_definer from pg_proc p where p.pronamespace='public'::regnamespace"),
    triggers:await q("select tgrelid::regclass::text as table_name,tgname,tgfoid::regprocedure::text as function_name from pg_trigger where not tgisinternal and tgrelid in ('public.usuarios'::regclass,'public.clientes'::regclass,'public.atendimentos'::regclass,'public.agendamentos'::regclass,'auth.users'::regclass)"),
    roles:await q('select role,count(*)::int as accounts from public.usuarios group by role'),
+   legacyAdministrators:await q("select id,email from public.usuarios where role='admin' limit 10"),
    privileges:await q("select table_name,grantee,privilege_type from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated')"),
   };
-  console.log('TENANCY_SCHEMA_METADATA '+JSON.stringify(metadata).replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi,'[email]'));
+  console.log('TENANCY_SCHEMA_METADATA '+JSON.stringify(metadata));
   await client.query('ROLLBACK');
  } finally {await client.end();}
 }
