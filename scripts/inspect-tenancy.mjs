@@ -14,7 +14,7 @@ if(client) {
    legacyAdministrators:await q("select id,email from public.usuarios where role='admin' limit 10"),
    privileges:await q("select table_name,grantee,privilege_type from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated')"),
   };
-  console.log('TENANCY_SCHEMA_METADATA '+JSON.stringify(metadata));
+  for (const [kind, rows] of Object.entries(metadata)) for (const row of rows) console.log('TENANCY_META '+kind+' '+JSON.stringify(row));
   await client.query('ROLLBACK');
  } finally {await client.end();}
 }
