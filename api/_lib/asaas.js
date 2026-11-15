@@ -9,8 +9,14 @@ export function asaasEnvironment() {
   return 'unconfigured';
 }
 
+export function asaasApiUrl() {
+  const url=new URL(process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://api-sandbox.asaas.com/v3');
+  if(url.protocol!=='https:' || !['www.asaas.com','api.asaas.com','sandbox.asaas.com','api-sandbox.asaas.com'].includes(url.hostname))throw new Error('Configure an official HTTPS Asaas API URL.');
+  return ['www.asaas.com','api.asaas.com'].includes(url.hostname)?'https://api.asaas.com/v3':'https://api-sandbox.asaas.com/v3';
+}
+
 export async function asaasFetch(path, options = {}) {
-  const apiUrl = process.env.ASAAS_API_URL || process.env.VITE_ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
+  const apiUrl = asaasApiUrl();
   const apiKey = (process.env.ASAAS_API_KEY || process.env.VITE_ASAAS_API_KEY || '').trim();
 
   const res = await fetch(`${apiUrl}${path}`, {

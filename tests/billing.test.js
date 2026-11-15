@@ -1,3 +1,4 @@
+import {asaasApiUrl} from '../api/_lib/asaas.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {activateWorkspaceBilling,payerInput,safeInvoiceUrl} from '../api/_lib/billing.js';
@@ -85,4 +86,14 @@ test('definitive provider validation errors preserve pilot access and allow a co
 test('a concurrent activation receives conflict before reaching the provider',async()=>{
  const h=harness();h.admin.rpc=async()=>({data:{acquired:false}});
  await assert.rejects(run(h),{status:409});assert.equal(h.requests.length,0);
+});
+
+test('normalizes retired Asaas hosts to the official API endpoints without changing environment',()=>{
+ const previous=process.env.ASAAS_API_URL;
+ try {
+  process.env.ASAAS_API_URL='https://www.asaas.com/api/v3';assert.equal(asaasApiUrl(),'https://api.asaas.com/v3');
+  process.env.ASAAS_API_URL='https://sandbox.asaas.com/api/v3';assert.equal(asaasApiUrl(),'https://api-sandbox.asaas.com/v3');
+  process.env.ASAAS_API_URL='https://api.asaas.com/v3';assert.equal(asaasApiUrl(),'https://api.asaas.com/v3');
+  process.env.ASAAS_API_URL='https://unrelated.invalid';assert.throws(asaasApiUrl);
+ }finally{if(previous===undefined)delete process.env.ASAAS_API_URL;else process.env.ASAAS_API_URL=previous;}
 });
