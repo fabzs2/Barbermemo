@@ -1,9 +1,10 @@
+import { withMonitoring } from '../_lib/monitoring.js';
 import { getAuthedContext } from '../_lib/supabaseServer.js';
 import { getSubscriptionsByCustomer, updateSubscriptionNextDueDate } from '../_lib/asaas.js';
 
 const DEFAULT_TRIAL_DAYS = 7;
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Método não permitido.' });
     return;
@@ -68,3 +69,5 @@ export default async function handler(req, res) {
     res.status(err.status && err.status < 500 ? 422 : 502).json({ error: err.message });
   }
 }
+
+export default withMonitoring('asaas.grant-trial', handler);

@@ -1,9 +1,22 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-})
-
+export default defineConfig(({ mode }) => {
+  const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
+  const release = env.VERCEL_GIT_COMMIT_SHA || env.SENTRY_RELEASE || 'local';
+  const upload = Boolean(env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT);
+  return {
+    define: {
+      'import.meta.env.VITE_APP_RELEASE': JSON.stringify(release),
+      'import.meta.env.VITE_APP_ENV': JSON.stringify(env.VERCEL_ENV || mode)
+    },
+    build: { sourcemap: upload ? 'hidden' : false },
+    plugins: [react(), tailwindcss(), ...(upload ? [sentryVitePlugin({
+      org: env.SENTRY_ORG, project: env.SENTRY_PROJECT, authToken: env.SENTRY_AUTH_TOKEN,
+      release: { name: release }, telemetry: false,
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] }
+    })] : [])]
+  };
+});

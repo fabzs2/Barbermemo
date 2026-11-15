@@ -1,3 +1,4 @@
+import { instrumentOperations } from './monitoring/index.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -82,7 +83,7 @@ const mapAgendamento = (ag) => {
   };
 };
 
-export const db = {
+const operations = {
   // Authentication APIs
   login: async (email, senha) => {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -776,3 +777,5 @@ export const db = {
     return (data || []).map(mapAgendamento);
   }
 };
+
+export const db = instrumentOperations(operations);

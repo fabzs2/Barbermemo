@@ -1,3 +1,4 @@
+import { withMonitoring } from '../_lib/monitoring.js';
 import { getAuthedContext } from '../_lib/supabaseServer.js';
 import { upsertAsaasCustomer } from '../_lib/asaas.js';
 
@@ -7,7 +8,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Método não permitido.' });
     return;
@@ -67,3 +68,5 @@ export default async function handler(req, res) {
 
   res.status(200).json(summary);
 }
+
+export default withMonitoring('asaas.sync-all', handler);
