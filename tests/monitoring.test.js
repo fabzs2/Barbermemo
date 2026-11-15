@@ -48,3 +48,17 @@ test('Telegram delivery retries failures and never exposes token in error', asyn
   try {globalThis.fetch=async()=>{calls++;throw new Error('fake-token');};await assert.rejects(deliverTelegram('test'),e=>!e.message.includes('fake-token'));assert.equal(calls,2);}
   finally {globalThis.fetch=old;if(token===undefined)delete process.env.TELEGRAM_BOT_TOKEN;else process.env.TELEGRAM_BOT_TOKEN=token;if(chat===undefined)delete process.env.TELEGRAM_CHAT_ID;else process.env.TELEGRAM_CHAT_ID=chat;}
 });
+test('webhook rejects forged requests before forwarding and acknowledges signed non-alerts', async()=>{
+  const {Readable}=await import('node:stream');
+  const {default:webhook}=await import('../api/sentry-alert.js');
+  const previous=Object.fromEntries(['SENTRY_WEBHOOK_SECRET','TELEGRAM_BOT_TOKEN','TELEGRAM_CHAT_ID'].map(k=>[k,process.env[k]]));
+  process.env.SENTRY_WEBHOOK_SECRET='test-secret';process.env.TELEGRAM_BOT_TOKEN='fake';process.env.TELEGRAM_CHAT_ID='fake';
+  const makeRes=()=>({...response(),end(){return this;}});
+  try {
+    const raw=Buffer.from('{ "action": "created" }');
+    const req=Readable.from([raw]);req.method='POST';req.headers={'sentry-hook-signature':'bad'};
+    const res=makeRes();await webhook(req,res);assert.equal(res.statusCode,401);
+    const signed=Readable.from([raw]);signed.method='POST';signed.headers={'sentry-hook-signature':createHmac('sha256','test-secret').update(raw).digest('hex'),'sentry-hook-resource':'issue'};
+    const accepted=makeRes();await webhook(signed,accepted);assert.equal(accepted.statusCode,204);
+  } finally {for(const [k,v] of Object.entries(previous)){if(v===undefined)delete process.env[k];else process.env[k]=v;}}
+});
